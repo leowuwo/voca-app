@@ -1,0 +1,1712 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>초등 800 · 2022 기본어휘 3000 영단어 학습 앱</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+KR:wght@400;500;700;800&display=swap');
+
+    * {
+      box-sizing: border-box;
+      font-family: 'Inter', 'Noto Sans KR', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+
+    body {
+      margin: 0;
+      background: #f1f5f9;
+      color: #0f172a;
+      overflow-x: hidden;
+    }
+
+    /* 날짜 버튼 바 줄바꿈 및 깔끔한 버튼 스타일 */
+    .day-chip-bar {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .day-chip {
+      padding: 6px 12px;
+      border-radius: 10px;
+      border: 1px solid #cbd5e1;
+      background: #f8fafc;
+      color: #334155;
+      font-size: 0.84rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .day-chip:hover {
+      background: #e0f2fe;
+      border-color: #7dd3fc;
+      color: #0369a1;
+    }
+
+    .day-chip.active {
+      background: #1d4ed8;
+      border-color: #1e40af;
+      color: #ffffff;
+      box-shadow: 0 2px 6px rgba(29, 78, 216, 0.25);
+    }
+
+    .panel {
+      display: none;
+    }
+
+    .panel.active {
+      display: block;
+    }
+
+    .word-card {
+      transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+    }
+
+    .word-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(15, 23, 42, 0.08);
+    }
+
+    .word-card.done {
+      border-color: #22c55e;
+      background: #f0fdf4;
+    }
+
+    .flash-card {
+      perspective: 1000px;
+      transition: transform 0.2s ease, border-color 0.2s ease, background-color 0.2s ease;
+    }
+
+    .flash-card:hover {
+      border-color: #3b82f6;
+      background: #f0f9ff;
+    }
+
+    .quiz-opt {
+      transition: all 0.15s ease;
+    }
+
+    .quiz-opt:hover:not(:disabled) {
+      border-color: #2563eb;
+      background: #eff6ff;
+      transform: translateY(-1px);
+    }
+
+    .quiz-opt.correct {
+      background: #dcfce7;
+      border-color: #16a34a;
+      color: #14532d;
+    }
+
+    .quiz-opt.wrong {
+      background: #fee2e2;
+      border-color: #dc2626;
+      color: #7f1d1d;
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col">
+  <!-- 상단 헤더 -->
+  <header class="bg-gradient-to-r from-blue-700 via-blue-600 to-sky-600 text-white shadow-md">
+    <div class="max-w-6xl mx-auto px-4 py-4 flex flex-wrap items-center justify-between gap-3">
+      <div>
+        <h1 class="text-lg sm:text-xl font-extrabold tracking-tight">
+          📘 초등 800 · 2022 기본어휘 3000 영단어 학습장
+        </h1>
+        <p class="text-xs sm:text-sm text-blue-100 mt-0.5">
+          초등 필수 800단어 (DAY 1~16) · 2022 개정 기본어휘 3,000단어 (DAY 1~150)
+        </p>
+      </div>
+      <div class="flex flex-wrap gap-2 text-xs sm:text-sm font-bold">
+        <div class="bg-white/20 backdrop-blur-sm px-3 py-1.5 rounded-full">
+          전체 수록: <span id="hdrTotal">3,800</span>단어
+        </div>
+        <div class="bg-white/20 backdrop-blur-sm px-3 py-1.5 rounded-full">
+          암기 완료: <span id="hdrLearned">0</span>개
+        </div>
+        <div class="bg-white/20 backdrop-blur-sm px-3 py-1.5 rounded-full">
+          퀴즈 정답: <span id="hdrQuiz">0</span>회
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- 상단 어휘군 선택 및 모드 탭 -->
+  <div class="max-w-6xl w-full mx-auto px-4 pt-4 flex flex-col gap-3">
+    <div class="flex flex-wrap gap-2">
+      <button
+        type="button"
+        id="btnGroupElem"
+        class="px-4 py-2.5 rounded-xl font-bold text-sm border-2 bg-blue-700 text-white border-blue-800 shadow-sm cursor-pointer transition"
+        onclick="setLevelGroup('elem')"
+      >
+        🎒 초등 영단어 800 (DAY 1~16 · 하루 50단어)
+      </button>
+      <button
+        type="button"
+        id="btnGroupMid"
+        class="px-4 py-2.5 rounded-xl font-bold text-sm border-2 bg-white text-slate-700 border-slate-300 hover:bg-slate-50 cursor-pointer transition"
+        onclick="setLevelGroup('mid')"
+      >
+        🎓 2022 기본어휘 3000 (DAY 1~150 · 하루 20단어)
+      </button>
+    </div>
+
+    <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+      <button
+        type="button"
+        id="tab-panelList"
+        class="tab-btn py-2.5 px-3 rounded-xl font-bold text-sm bg-slate-900 text-white cursor-pointer transition"
+        onclick="showPanel('panelList')"
+      >
+        1. 단어장 (날짜별)
+      </button>
+      <button
+        type="button"
+        id="tab-panelFlash"
+        class="tab-btn py-2.5 px-3 rounded-xl font-bold text-sm bg-slate-200 text-slate-700 hover:bg-slate-300 cursor-pointer transition"
+        onclick="showPanel('panelFlash')"
+      >
+        2. 플래시카드
+      </button>
+      <button
+        type="button"
+        id="tab-panelQuiz"
+        class="tab-btn py-2.5 px-3 rounded-xl font-bold text-sm bg-slate-200 text-slate-700 hover:bg-slate-300 cursor-pointer transition"
+        onclick="showPanel('panelQuiz')"
+      >
+        3. 단어 퀴즈
+      </button>
+      <button
+        type="button"
+        id="tab-panelStats"
+        class="tab-btn py-2.5 px-3 rounded-xl font-bold text-sm bg-slate-200 text-slate-700 hover:bg-slate-300 cursor-pointer transition"
+        onclick="showPanel('panelStats')"
+      >
+        4. 학습 현황
+      </button>
+    </div>
+  </div>
+
+  <!-- 메인 콘텐츠 -->
+  <main class="max-w-6xl w-full mx-auto px-4 py-4 flex-1">
+    <!-- 1. 단어장 패널 -->
+    <section id="panelList" class="panel active">
+      <div class="bg-white border border-slate-200 rounded-2xl p-4 mb-4 shadow-sm flex flex-col gap-3">
+        <!-- 초등 800 날짜별 클릭 버튼 바 (DAY 1~16 및 전체) -->
+        <div id="elemDayButtonBar" class="flex flex-col gap-2">
+          <div class="flex items-center justify-between flex-wrap gap-2">
+            <span class="text-sm font-bold text-slate-800">📅 초등 영단어 800 날짜 바로가기:</span>
+            <span class="text-xs text-slate-500">날짜 버튼을 클릭하면 해당 DAY 50단어로 즉시 이동합니다</span>
+          </div>
+          <div id="elemDayChips" class="day-chip-bar"></div>
+        </div>
+
+        <!-- 날짜 드롭다운 & 별표 등급 필터 -->
+        <div class="flex flex-wrap items-center gap-2 pt-1 border-t border-slate-100">
+          <label for="daySelect" class="text-sm font-bold text-slate-700">날짜 선택:</label>
+          <select
+            id="daySelect"
+            class="px-3 py-2 rounded-xl border border-slate-300 bg-slate-50 text-slate-900 text-sm font-bold focus:outline-none focus:ring-2 focus:ring-blue-500"
+            onchange="onDaySelectChange(this.value)"
+          ></select>
+
+          <div id="starFilterGroup" class="hidden flex-wrap items-center gap-1.5 ml-0 sm:ml-2">
+            <span class="text-xs font-bold text-slate-500 mr-1">등급:</span>
+            <button type="button" class="star-btn px-3 py-1.5 rounded-full text-xs font-bold border border-sky-600 bg-sky-600 text-white cursor-pointer" data-star="ALL" onclick="selectStarFilter('ALL')">별표 전체</button>
+            <button type="button" class="star-btn px-3 py-1.5 rounded-full text-xs font-bold border border-slate-300 bg-slate-50 text-slate-700 hover:bg-slate-100 cursor-pointer" data-star="*" onclick="selectStarFilter('*')">* (초등 권장)</button>
+            <button type="button" class="star-btn px-3 py-1.5 rounded-full text-xs font-bold border border-slate-300 bg-slate-50 text-slate-700 hover:bg-slate-100 cursor-pointer" data-star="**" onclick="selectStarFilter('**')">** (중·고 공통)</button>
+            <button type="button" class="star-btn px-3 py-1.5 rounded-full text-xs font-bold border border-slate-300 bg-slate-50 text-slate-700 hover:bg-slate-100 cursor-pointer" data-star="0" onclick="selectStarFilter('0')">0 (기본 어휘)</button>
+          </div>
+        </div>
+
+        <!-- 검색 및 미암기 필터 -->
+        <div class="flex flex-wrap items-center gap-2">
+          <input
+            type="text"
+            id="searchInput"
+            placeholder="영단어, 한글 뜻, 파생어, 등급(*, **, 0)으로 검색..."
+            class="flex-1 min-w-[220px] px-3.5 py-2 rounded-xl border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            oninput="renderList()"
+          />
+          <button
+            type="button"
+            id="onlyUnlearnedBtn"
+            class="px-3.5 py-2 rounded-full text-xs sm:text-sm font-bold border border-slate-300 bg-slate-50 text-slate-700 hover:bg-slate-100 cursor-pointer transition"
+            onclick="toggleUnlearnedFilter()"
+          >
+            미암기만 보기
+          </button>
+          <button
+            type="button"
+            class="px-3.5 py-2 rounded-full text-xs sm:text-sm font-bold border border-slate-200 bg-white text-slate-500 hover:text-slate-800 cursor-pointer transition"
+            onclick="resetFilters()"
+          >
+            필터 초기화
+          </button>
+        </div>
+
+        <div id="countSummary" class="text-sm font-bold text-slate-600"></div>
+      </div>
+
+      <div id="wordGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3"></div>
+    </section>
+
+    <!-- 2. 플래시카드 패널 -->
+    <section id="panelFlash" class="panel">
+      <div class="bg-white border border-slate-200 rounded-3xl p-5 sm:p-7 max-w-2xl mx-auto text-center shadow-sm">
+        <div id="flashMeta" class="text-sm font-bold text-slate-500"></div>
+        <div
+          class="flash-card min-h-[230px] border-2 border-blue-300 rounded-2xl bg-slate-50 p-6 my-4 flex flex-col items-center justify-center cursor-pointer select-none"
+          onclick="toggleFlashMeaning()"
+        >
+          <div id="flashStarBadge" class="mb-2"></div>
+          <div id="flashEn" class="text-3xl sm:text-4xl font-extrabold text-slate-900">a / an</div>
+          <div id="flashDeriv" class="text-sm font-medium text-slate-500 mt-1.5"></div>
+          <div id="flashKo" class="hidden text-lg sm:text-xl font-bold text-blue-700 mt-3 leading-snug"></div>
+          <div class="text-xs text-slate-400 mt-4">카드를 클릭하면 한글 뜻과 파생어 정보가 나타납니다</div>
+        </div>
+        <div class="flex flex-wrap justify-center gap-2">
+          <button type="button" class="px-4 py-2.5 rounded-xl font-bold text-sm bg-slate-600 text-white hover:bg-slate-700 cursor-pointer" onclick="prevFlash()">← 이전</button>
+          <button type="button" class="px-4 py-2.5 rounded-xl font-bold text-sm bg-blue-700 text-white hover:bg-blue-800 cursor-pointer" onclick="speakWord(currentFlashWord().en)">🔊 발음 듣기</button>
+          <button type="button" class="px-4 py-2.5 rounded-xl font-bold text-sm bg-emerald-600 text-white hover:bg-emerald-700 cursor-pointer" onclick="markFlashLearned()">✓ 외웠어요</button>
+          <button type="button" class="px-4 py-2.5 rounded-xl font-bold text-sm bg-slate-600 text-white hover:bg-slate-700 cursor-pointer" onclick="nextFlash()">다음 →</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3. 단어 퀴즈 패널 (영단어 보고 한글 뜻 선택지 4지선다) -->
+    <section id="panelQuiz" class="panel">
+      <div class="bg-white border border-slate-200 rounded-3xl p-5 sm:p-7 max-w-2xl mx-auto text-center shadow-sm">
+        <div class="flex items-center justify-center gap-2 text-xs sm:text-sm font-bold text-slate-500">
+          <span id="quizMeta">영단어를 보고 알맞은 한글 뜻을 고르세요</span>
+        </div>
+        <div id="quizWord" class="text-3xl sm:text-4xl font-extrabold text-slate-900 my-3">apple</div>
+        <div id="quizDerivHint" class="text-xs sm:text-sm text-slate-500 mb-3 min-h-[20px]"></div>
+        <button
+          type="button"
+          class="px-4 py-2 rounded-xl font-bold text-sm bg-blue-600 text-white hover:bg-blue-700 cursor-pointer"
+          onclick="speakWord(currentQuizWord ? currentQuizWord.en : '')"
+        >
+          🔊 발음 힌트 듣기
+        </button>
+
+        <div id="quizOptions" class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 mt-5 text-left"></div>
+        <div id="quizResult" class="mt-4 text-sm font-bold min-h-[24px] text-slate-800"></div>
+
+        <button
+          type="button"
+          class="mt-3 px-5 py-2.5 rounded-xl font-bold text-sm bg-slate-700 text-white hover:bg-slate-800 cursor-pointer"
+          onclick="nextQuiz()"
+        >
+          다음 문제 →
+        </button>
+      </div>
+    </section>
+
+    <!-- 4. 학습 현황 패널 -->
+    <section id="panelStats" class="panel">
+      <div class="bg-white border border-slate-200 rounded-3xl p-6 max-w-2xl mx-auto text-center shadow-sm">
+        <h2 class="text-xl font-extrabold text-slate-900 mt-0">📊 나의 단어 학습 기록</h2>
+        <p class="text-sm text-slate-500 mt-1">암기 체크와 퀴즈 정답 기록은 브라우저에 자동 저장됩니다.</p>
+
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 my-5">
+          <div class="bg-slate-50 border border-slate-200 rounded-2xl p-4">
+            <div class="text-xs font-bold text-slate-500">암기 완료 단어</div>
+            <div id="statLearned" class="text-2xl font-extrabold text-blue-700 mt-1">0</div>
+          </div>
+          <div class="bg-slate-50 border border-slate-200 rounded-2xl p-4">
+            <div class="text-xs font-bold text-slate-500">퀴즈 정답 횟수</div>
+            <div id="statQuiz" class="text-2xl font-extrabold text-emerald-600 mt-1">0</div>
+          </div>
+          <div class="bg-slate-50 border border-slate-200 rounded-2xl p-4">
+            <div class="text-xs font-bold text-slate-500">현재 필터 단어 수</div>
+            <div id="statPool" class="text-2xl font-extrabold text-slate-800 mt-1">0</div>
+          </div>
+        </div>
+
+        <div id="statsStatusMsg" class="text-xs font-bold text-emerald-700 min-h-[18px] mb-2"></div>
+
+        <div id="resetConfirmBox" class="hidden bg-amber-50 border border-amber-300 rounded-2xl p-3 mb-3 text-sm">
+          <div class="font-bold text-amber-900 mb-2">모든 암기 체크 및 퀴즈 정답 기록을 초기화할까요?</div>
+          <div class="flex justify-center gap-2">
+            <button type="button" class="px-3.5 py-1.5 rounded-lg bg-red-600 text-white font-bold text-xs cursor-pointer" onclick="confirmResetStats()">네, 초기화합니다</button>
+            <button type="button" class="px-3.5 py-1.5 rounded-lg bg-slate-200 text-slate-800 font-bold text-xs cursor-pointer" onclick="cancelResetStats()">취소</button>
+          </div>
+        </div>
+
+        <button
+          type="button"
+          class="px-4 py-2.5 rounded-xl font-bold text-sm bg-slate-600 text-white hover:bg-slate-700 cursor-pointer"
+          onclick="requestResetStats()"
+        >
+          기록 초기화
+        </button>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    /**
+     * 스토리지 키 상수: 암기 완료 ID 목록과 퀴즈 정답 카운트를 저장합니다.
+     */
+    const STORAGE_KEY = "voca_app3_state_v1";
+
+    /**
+     * 브라우저 localStorage에서 저장된 학습 상태를 안전하게 불러옵니다.
+     * 저장소 접근 제한이나 파싱 오류 시 기본 상태로 안전하게 폴백합니다.
+     */
+    function loadState() {
+      const defaultState = { learnedIds: [], quizCorrect: 0 };
+      try {
+        if (typeof window === "undefined" || !window.localStorage) {
+          return defaultState;
+        }
+        const raw = window.localStorage.getItem(STORAGE_KEY);
+        if (!raw) return defaultState;
+        const parsed = JSON.parse(raw);
+        const learnedIds = Array.isArray(parsed.learnedIds)
+          ? parsed.learnedIds.filter((id) => typeof id === "string")
+          : [];
+        const quizCorrect =
+          typeof parsed.quizCorrect === "number" && Number.isFinite(parsed.quizCorrect) && parsed.quizCorrect >= 0
+            ? Math.floor(parsed.quizCorrect)
+            : 0;
+        return { learnedIds, quizCorrect };
+      } catch (err) {
+        return defaultState;
+      }
+    }
+
+    /**
+     * 현재 학습 상태를 localStorage에 안전하게 저장합니다.
+     */
+    function saveState() {
+      try {
+        if (typeof window === "undefined" || !window.localStorage) return;
+        const payload = JSON.stringify({
+          learnedIds: Array.isArray(state.learnedIds) ? state.learnedIds : [],
+          quizCorrect: typeof state.quizCorrect === "number" ? state.quizCorrect : 0
+        });
+        window.localStorage.setItem(STORAGE_KEY, payload);
+      } catch (err) {
+        // 프라이빗 모드 또는 저장 용량 초과 시에도 앱 동작이 중단되지 않도록 무시합니다.
+      }
+    }
+
+    /**
+     * 상단 헤더 및 학습 현황 탭의 숫자 카운터를 최신 상태로 동기화합니다.
+     */
+    function updateHeaderAndStats() {
+      try {
+        const totalWordsCount = (Array.isArray(elemWords) ? elemWords.length : 0) +
+          (Array.isArray(midWords) ? midWords.length : 0);
+        const learnedCount = state && Array.isArray(state.learnedIds) ? state.learnedIds.length : 0;
+        const quizCount = state && typeof state.quizCorrect === "number" ? state.quizCorrect : 0;
+        const currentPoolCount = typeof getFilteredPool === "function" ? getFilteredPool(true).length : 0;
+
+        const hdrTotalEl = document.getElementById("hdrTotal");
+        const hdrLearnedEl = document.getElementById("hdrLearned");
+        const hdrQuizEl = document.getElementById("hdrQuiz");
+
+        if (hdrTotalEl) hdrTotalEl.textContent = totalWordsCount.toLocaleString();
+        if (hdrLearnedEl) hdrLearnedEl.textContent = learnedCount.toLocaleString();
+        if (hdrQuizEl) hdrQuizEl.textContent = quizCount.toLocaleString();
+
+        const statLearnedEl = document.getElementById("statLearned");
+        const statQuizEl = document.getElementById("statQuiz");
+        const statPoolEl = document.getElementById("statPool");
+
+        if (statLearnedEl) statLearnedEl.textContent = learnedCount.toLocaleString();
+        if (statQuizEl) statQuizEl.textContent = quizCount.toLocaleString();
+        if (statPoolEl) statPoolEl.textContent = currentPoolCount.toLocaleString();
+      } catch (err) {
+        // DOM 요소가 아직 준비되지 않은 경우 안전하게 넘어갑니다.
+      }
+    }
+
+    /**
+     * Web Speech API(speechSynthesis)를 사용해 영어 단어를 읽어줍니다.
+     * 슬래시로 병기된 표기("a / an")는 첫 번째 발음 대상만 추출하며, 미지원 환경에서도 예외를 던지지 않습니다.
+     */
+    function speakWord(text) {
+      try {
+        if (!text || typeof text !== "string") return;
+        const cleaned = text.split("/")[0].trim();
+        if (!cleaned) return;
+        if (typeof window === "undefined" || !("speechSynthesis" in window)) return;
+        if (typeof SpeechSynthesisUtterance === "undefined") return;
+
+        window.speechSynthesis.cancel();
+        const utterance = new SpeechSynthesisUtterance(cleaned);
+        utterance.lang = "en-US";
+        utterance.rate = 0.95;
+        window.speechSynthesis.speak(utterance);
+      } catch (err) {
+        // 음성 합성 미지원 또는 차단 환경에서도 오류 없이 무시합니다.
+      }
+    }
+
+    /**
+     * [1] 초등 영단어 800 (DAY 1 ~ DAY 16, 일차당 50단어 = 총 800단어)
+     * 시드 어휘와 확장 코퍼스를 결합하여 중복 없이 800개 전체를 생성합니다.
+     */
+    const ELEM_SEED = [
+      ["a / an", "하나의, 한 개의"],
+      ["about", "~에 관하여, 약"],
+      ["across", "~을 가로질러, 건너서"],
+      ["act", "행동하다, 연기하다"],
+      ["address", "주소, 연설하다"],
+      ["afraid", "두려워하는, 무서워하는"],
+      ["after", "~후에, 뒤에"],
+      ["afternoon", "오후"],
+      ["again", "다시, 또"],
+      ["age", "나이, 연령, 시대"],
+      ["ago", "~전에"],
+      ["air", "공기, 대기"],
+      ["airport", "공항"],
+      ["album", "앨범, 사진첩"],
+      ["all", "모든, 모두"],
+      ["along", "~을 따라서"],
+      ["always", "항상, 언제나"],
+      ["among", "~사이에 (셋 이상)"],
+      ["and", "그리고, ~와"],
+      ["angry", "화난, 성난"],
+      ["animal", "동물"],
+      ["answer", "대답, 답하다"],
+      ["any", "어떤, 조금이라도"],
+      ["apartment", "아파트"],
+      ["apple", "사과"],
+      ["arm", "팔"],
+      ["around", "~주위에, ~쯤"],
+      ["arrive", "도착하다"],
+      ["as", "~처럼, ~로서, ~할 때"],
+      ["ask", "묻다, 부탁하다"],
+      ["at", "~에, ~에서"],
+      ["aunt", "이모, 고모, 숙모"],
+      ["autumn", "가을"],
+      ["away", "떨어져, 멀리"],
+      ["baby", "아기"],
+      ["back", "뒤, 등, 돌아오다"],
+      ["bad", "나쁜, 서툰"],
+      ["bag", "가방, 봉투"],
+      ["ball", "공"],
+      ["balloon", "풍선"],
+      ["banana", "바나나"],
+      ["band", "악단, 밴드, 띠"],
+      ["bank", "은행, 강둑"],
+      ["base", "바탕, 기초, 기지"],
+      ["basket", "바구니"],
+      ["bath", "목욕"],
+      ["be", "~이다, 있다, 되다"],
+      ["beach", "해변, 바닷가"],
+      ["bear", "곰; 참다, 낳다"],
+      ["beautiful", "아름다운"],
+      ["bed", "침대"],
+      ["bedroom", "침실"],
+      ["bee", "꿀벌"],
+      ["beef", "소고기"],
+      ["before", "~전에, 앞에"],
+      ["begin", "시작하다"],
+      ["behind", "~뒤에"],
+      ["believe", "믿다"],
+      ["bell", "종, 벨"],
+      ["belong", "~에 속하다"],
+      ["below", "~아래에"],
+      ["belt", "벨트, 띠"],
+      ["bench", "벤치"],
+      ["beside", "~옆에"],
+      ["best", "가장 좋은, 최고"],
+      ["better", "더 좋은, 더 잘"],
+      ["between", "~사이에 (둘 사이)"],
+      ["bicycle", "자전거"],
+      ["big", "큰, 커다란"],
+      ["bike", "자전거, 오토바이"],
+      ["bird", "새"],
+      ["birthday", "생일"],
+      ["black", "검은색, 검은"],
+      ["blanket", "담요"],
+      ["blue", "파란색, 파란"],
+      ["board", "판자, 칠판, 탑승하다"],
+      ["boat", "보트, 배"],
+      ["body", "몸, 신체"],
+      ["book", "책; 예약하다"],
+      ["bookstore", "서점"],
+      ["boot", "부츠, 장화"],
+      ["born", "태어난"],
+      ["borrow", "빌리다"],
+      ["both", "둘 다, 양쪽의"],
+      ["bottle", "병"],
+      ["bottom", "밑바닥, 아래"],
+      ["box", "상자"],
+      ["boy", "소년, 남자아이"],
+      ["bread", "빵"],
+      ["break", "부수다, 깨뜨리다; 쉬는 시간"],
+      ["breakfast", "아침 식사"],
+      ["bridge", "다리"],
+      ["bright", "밝은, 영리한"],
+      ["bring", "가져오다, 데려오다"],
+      ["brother", "형제, 오빠, 남동생"],
+      ["brown", "갈색, 갈색의"],
+      ["brush", "붓, 솔; 닦다"],
+      ["build", "짓다, 세우다"],
+      ["building", "건물"],
+      ["bus", "버스"]
+    ];
+
+    const ELEM_EXTRA_BANK = [
+      ["butter", "버터"], ["buy", "사다"], ["by", "~옆에, ~까지, ~로"], ["cake", "케이크"], ["call", "부르다, 전화하다"],
+      ["camera", "카메라"], ["camp", "캠프, 야영하다"], ["can", "~할 수 있다; 깡통"], ["candy", "사탕"], ["cap", "모자, 뚜껑"],
+      ["car", "자동차"], ["card", "카드"], ["care", "돌보다, 걱정하다"], ["careful", "조심하는, 신중한"], ["carrot", "당근"],
+      ["carry", "나르다, 운반하다"], ["case", "경우, 상자"], ["cat", "고양이"], ["catch", "잡다, 붙잡다"], ["cause", "원인, ~을 일으키다"],
+      ["celebrate", "축하하다, 기념하다"], ["center", "중앙, 중심"], ["chair", "의자"], ["chance", "기회"], ["change", "바꾸다, 변화"],
+      ["cheap", "값이 싼"], ["check", "확인하다, 수표"], ["cheese", "치즈"], ["chicken", "닭, 닭고기"], ["child", "어린이, 아이"],
+      ["children", "어린이들"], ["china", "도자기; 중국"], ["chocolate", "초콜릿"], ["choose", "고르다, 선택하다"], ["chopsticks", "젓가락"],
+      ["city", "도시"], ["class", "수업, 학급"], ["classroom", "교실"], ["clean", "깨끗한; 청소하다"], ["clear", "맑은, 분명한"],
+      ["climb", "오르다, 등반하다"], ["clock", "시계"], ["close", "닫다; 가까운"], ["clothes", "옷, 의류"], ["cloud", "구름"],
+      ["cloudy", "구름 낀, 흐린"], ["club", "동아리, 클럽"], ["coat", "코트, 외투"], ["coffee", "커피"], ["coin", "동전"],
+      ["cold", "추운, 차가운; 감기"], ["collect", "모으다, 수집하다"], ["color", "색, 색깔; 색칠하다"], ["come", "오다"], ["comic", "만화의, 웃기는"],
+      ["company", "회사, 친구"], ["computer", "컴퓨터"], ["cook", "요리하다; 요리사"], ["cookie", "쿠키"], ["cool", "시원한, 멋진"],
+      ["copy", "복사하다, 모사"], ["corn", "옥수수"], ["corner", "모퉁이, 구석"], ["correct", "맞는, 정확한; 고치다"], ["cost", "비용이 들다, 가격"],
+      ["cotton", "면, 목화"], ["cough", "기침하다, 기침"], ["count", "세다, 계산하다"], ["country", "나라, 국가, 시골"], ["course", "과정, 강좌, 길"],
+      ["cousin", "사촌"], ["cover", "덮다; 표지"], ["cow", "암소"], ["crayon", "크레용"], ["create", "만들어 내다, 창조하다"],
+      ["cross", "건너다; 십자가"], ["cry", "울다, 외치다"], ["cup", "컵"], ["cut", "자르다, 베다"], ["cute", "귀여운"],
+      ["dad", "아빠"], ["daily", "매일의, 일상의"], ["dance", "춤추다, 춤"], ["danger", "위험"], ["dangerous", "위험한"],
+      ["dark", "어두운, 짙은"], ["date", "날짜, 데이트"], ["daughter", "딸"], ["day", "날, 낮, 하루"], ["dear", "친애하는, 소중한"],
+      ["decide", "결정하다, 결심하다"], ["deep", "깊은"], ["deer", "사슴"], ["delicious", "맛있는"], ["desk", "책상"],
+      ["diary", "일기"], ["dictionary", "사전"], ["die", "죽다"], ["different", "다른, 차이 나는"], ["difficult", "어려운"],
+      ["dig", "파다"], ["dinner", "저녁 식사"], ["dirty", "더러운"], ["dish", "접시, 요리"], ["do", "하다, 행하다"],
+      ["doctor", "의사, 박사"], ["dog", "개"], ["doll", "인형"], ["dollar", "달러"], ["dolphin", "돌고래"],
+      ["door", "문"], ["down", "아래로, 내려가다"], ["draw", "그리다, 끌다"], ["dream", "꿈, 꿈꾸다"], ["dress", "드레스, 옷을 입다"],
+      ["drink", "마시다; 음료"], ["drive", "운전하다, 몰다"], ["driver", "운전자"], ["drop", "떨어뜨리다; 방울"], ["drum", "북, 드럼"],
+      ["dry", "마른, 건조한; 말리다"], ["duck", "오리"], ["during", "~동안에"], ["ear", "귀"], ["early", "일찍, 이른"],
+      ["earth", "지구, 땅, 흙"], ["east", "동쪽, 동부의"], ["easy", "쉬운"], ["eat", "먹다"], ["egg", "달걀, 알"],
+      ["eight", "여덟, 8"], ["eighteen", "열여덟, 18"], ["eighty", "여든, 80"], ["either", "둘 중 어느 하나, ~도 역시"], ["elephant", "코끼리"],
+      ["eleven", "열하나, 11"], ["else", "그 밖에, 다른"], ["email", "이메일"], ["empty", "빈, 비어 있는"], ["end", "끝, 끝나다"],
+      ["enemy", "적"], ["enjoy", "즐기다"], ["enough", "충분한, 충분히"], ["enter", "들어가다, 입장하다"], ["eraser", "지우개"],
+      ["evening", "저녁"], ["ever", "지금까지, 언젠가"], ["every", "모든, 매~"], ["everyone", "모두, 모든 사람"], ["everything", "모든 것"],
+      ["exam", "시험"], ["example", "예, 보기"], ["excited", "신난, 흥분한"], ["exciting", "흥미진진한, 신나는"], ["excuse", "용서하다, 변명"],
+      ["exercise", "운동, 연습하다"], ["expensive", "비싼"], ["experience", "경험, 체험하다"], ["explain", "설명하다"], ["eye", "눈"],
+      ["face", "얼굴; 마주하다"], ["fact", "사실"], ["factory", "공장"], ["fail", "실패하다"], ["fall", "떨어지다, 넘어지다; 가을"],
+      ["family", "가족"], ["famous", "유명한"], ["fan", "선풍기, 부채, 팬"], ["far", "먼, 멀리"], ["farm", "농장"],
+      ["farmer", "농부"], ["fast", "빠른, 빨리"], ["fat", "뚱뚱한, 지방"], ["father", "아버지, 아빠"], ["favorite", "가장 좋아하는"],
+      ["fear", "두려움, 무서워하다"], ["feather", "깃털"], ["february", "2월"], ["feed", "먹이를 주다"], ["feel", "느끼다, 기분이 들다"],
+      ["feeling", "기분, 느낌"], ["festival", "축제"], ["few", "거의 없는, 소수의"], ["field", "밭, 들판, 분야"], ["fifteen", "열다섯, 15"],
+      ["fifty", "쉰, 50"], ["fight", "싸우다, 싸움"], ["fill", "채우다"], ["film", "영화, 필름"], ["final", "마지막의, 결승의"],
+      ["find", "찾다, 발견하다"], ["fine", "좋은, 맑은, 벌금"], ["finger", "손가락"], ["finish", "끝내다, 마치다"], ["fire", "불, 화재"],
+      ["first", "첫 번째의, 먼저"], ["fish", "물고기; 낚시하다"], ["fit", "맞다, 건강한"], ["five", "다섯, 5"], ["fix", "고치다, 고정하다"],
+      ["flag", "깃발"], ["flat", "평평한, 납작한"], ["floor", "바닥, 층"], ["flower", "꽃"], ["fly", "날다; 파리"],
+      ["follow", "따라가다, 따르다"], ["food", "음식, 식품"], ["foot", "발, 1피트"], ["football", "축구, 미식축구"], ["for", "~을 위하여, ~동안"],
+      ["foreign", "외국의"], ["forest", "숲"], ["forget", "잊어버리다"], ["fork", "포크"], ["form", "형태, 모양, 만들다"],
+      ["forty", "마흔, 40"], ["four", "넷, 4"], ["fourteen", "열넷, 14"], ["fox", "여우"], ["free", "자유로운, 무료의, 한가한"],
+      ["fresh", "신선한"], ["friday", "금요일"], ["friend", "친구"], ["friendly", "친절한, 다정한"], ["frog", "개구리"],
+      ["from", "~로부터, ~에서"], ["front", "앞, 앞면"], ["fruit", "과일"], ["full", "가득 찬, 배부른"], ["fun", "재미, 즐거운"],
+      ["funny", "웃기는, 재미있는"], ["future", "미래, 장래"], ["game", "게임, 경기"], ["garden", "정원"], ["gas", "가스, 기체, 휘발유"],
+      ["gate", "문, 대문"], ["get", "얻다, 받다, 되다, 가다"], ["ghost", "유령, 귀신"], ["giant", "거대한, 거인"], ["gift", "선물, 재능"],
+      ["girl", "소녀, 여자아이"], ["give", "주다"], ["glad", "기쁜, 반가운"], ["glass", "유리, 잔"], ["glove", "장갑"],
+      ["go", "가다"], ["goal", "목표, 골"], ["goat", "염소"], ["god", "신"], ["gold", "금, 금색의"],
+      ["good", "좋은, 착한"], ["goodbye", "안녕 (작별 인사)"], ["goose", "거위"], ["grade", "학년, 등급, 성적"], ["grain", "곡물, 낟알"],
+      ["grandfather", "할아버지"], ["grandmother", "할머니"], ["grandparent", "조부모"], ["grape", "포도"], ["grass", "잔디, 풀"],
+      ["gray", "회색, 회색의"], ["great", "훌륭한, 대단한"], ["green", "초록색, 초록의"], ["ground", "땅, 지면"], ["group", "집단, 모둠"],
+      ["grow", "자라다, 키우다"], ["guess", "추측하다, 짐작하다"], ["guest", "손님, 손님방"], ["guide", "안내하다, 안내서"], ["guitar", "기타"],
+      ["gum", "껌, 잇몸"], ["guy", "남자, 사람"], ["habit", "습관"], ["hair", "머리카락, 털"], ["half", "절반, 반"],
+      ["hall", "복도, 홀, 회관"], ["ham", "햄"], ["hamburger", "햄버거"], ["hammer", "망치"], ["hand", "손; 건네주다"],
+      ["handle", "손잡이; 다루다"], ["happen", "일어나다, 발생하다"], ["happy", "행복한, 기쁜"], ["hard", "어려운, 단단한, 열심히"], ["hardly", "거의 ~않다"],
+      ["hat", "모자"], ["hate", "미워하다, 싫어하다"], ["have", "가지다, 먹다, ~해야 하다"], ["he", "그"], ["head", "머리, 우두머리"],
+      ["headache", "두통"], ["health", "건강"], ["healthy", "건강한"], ["hear", "듣다"], ["heart", "심장, 마음"],
+      ["heat", "열, 더위, 데우다"], ["heavy", "무거운"], ["hello", "안녕하세요"], ["help", "돕다, 도움"], ["helpful", "도움이 되는"],
+      ["hen", "암탉"], ["her", "그녀의, 그녀를"], ["here", "여기에"], ["hi", "안녕"], ["hide", "숨기다, 숨다"],
+      ["high", "높은, 높이"], ["hill", "언덕"], ["him", "그를, 그에게"], ["hippo", "하마"], ["his", "그의"],
+      ["history", "역사"], ["hit", "치다, 때리다, 부딪치다"], ["hobby", "취미"], ["hold", "쥐다, 잡다, 개최하다"], ["hole", "구멍"],
+      ["holiday", "휴일, 공휴일, 휴가"], ["home", "집, 가정, 집으로"], ["homework", "숙제"], ["honest", "정직한"], ["honey", "꿀, 여보"],
+      ["hope", "희망하다, 바라다"], ["horse", "말"], ["hospital", "병원"], ["hot", "뜨거운, 더운, 매운"], ["hotel", "호텔"],
+      ["hour", "시간 (60분)"], ["house", "집, 주택"], ["how", "어떻게, 얼마나"], ["hug", "껴안다, 포옹"], ["huge", "거대한, 엄청난"],
+      ["human", "인간의, 사람"], ["hundred", "백, 100"], ["hungry", "배고픈"], ["hurry", "서두르다"], ["hurt", "다치게 하다, 아프다"],
+      ["husband", "남편"], ["ice", "얼음"], ["idea", "생각, 아이디어"], ["if", "만약 ~라면, ~인지"], ["ill", "아픈, 병든"],
+      ["imagine", "상상하다"], ["important", "중요한"], ["in", "~안에, ~에"], ["inside", "안쪽, ~안에"], ["instead", "대신에"],
+      ["interest", "흥미, 관심"], ["interesting", "흥미로운, 재미있는"], ["internet", "인터넷"], ["into", "~안으로"], ["introduce", "소개하다"],
+      ["invite", "초대하다"], ["island", "섬"], ["it", "그것"], ["item", "항목, 물품"], ["jacket", "재킷, 잠바"],
+      ["january", "1월"], ["jeans", "청바지"], ["job", "직업, 일"], ["join", "참여하다, 가입하다, 잇다"], ["joke", "농담, 농담하다"],
+      ["juice", "주스"], ["july", "7월"], ["jump", "뛰다, 점프하다"], ["june", "6월"], ["just", "방금, 단지, 꼭"],
+      ["keep", "유지하다, 지키다, 계속하다"], ["kettle", "주전자"], ["key", "열쇠, 비결, 핵심"], ["kick", "차다, 발로 차다"], ["kid", "아이, 어린이"],
+      ["kill", "죽이다"], ["kind", "친절한; 종류"], ["king", "왕, 국왕"], ["kiss", "키스하다, 입맞춤"], ["kitchen", "부엌, 주방"],
+      ["kite", "연"], ["knee", "무릎"], ["knife", "칼"], ["knock", "두드리다, 노크하다"], ["know", "알다"],
+      ["lake", "호수"], ["lamp", "램프, 전등"], ["land", "땅, 육지, 착륙하다"], ["language", "언어, 말"], ["large", "큰, 넓은"],
+      ["last", "마지막의, 지난, 계속되다"], ["late", "늦은, 늦게"], ["laugh", "웃다, 웃음소리"], ["law", "법, 법률"], ["lay", "놓다, 눕히다, (알을) 낳다"],
+      ["lazy", "게으른"], ["lead", "이끌다, 안내하다"], ["leaf", "나뭇잎"], ["learn", "배우다, 익히다"], ["leave", "떠나다, 남기다"],
+      ["left", "왼쪽의, 왼쪽"], ["leg", "다리"], ["lemon", "레몬"], ["lend", "빌려주다"], ["lesson", "수업, 교훈"],
+      ["let", "~하게 하다, 두다"], ["letter", "편지, 글자"], ["library", "도서관"], ["lie", "눕다; 거짓말하다"], ["life", "생명, 삶, 생활"],
+      ["lift", "들어 올리다, 엘리베이터"], ["light", "빛, 불; 가벼운, 밝은"], ["like", "좋아하다; ~처럼, ~같은"], ["line", "선, 줄, 줄을 서다"], ["lion", "사자"],
+      ["lip", "입술"], ["list", "목록, 명단"], ["listen", "듣다, 귀 기울이다"], ["little", "작은, 적은, 조금"], ["live", "살다; 살아 있는"],
+      ["living", "생활, 살아 있는"], ["lock", "자물쇠, 잠그다"], ["lonely", "외로운"], ["long", "긴, 오래"], ["look", "보다, ~처럼 보이다"],
+      ["lose", "잃어버리다, 지다"], ["lot", "많은, 다수"], ["loud", "시끄러운, 큰소리의"], ["love", "사랑하다, 사랑"], ["lovely", "사랑스러운, 멋진"],
+      ["low", "낮은, 낮게"], ["luck", "행운, 운"], ["lucky", "운이 좋은"], ["lunch", "점심 식사"], ["machine", "기계"],
+      ["mad", "화난, 미친"], ["magazine", "잡지"], ["magic", "마법, 마술"], ["mail", "우편, 메일"], ["main", "주요한, 주된"],
+      ["make", "만들다"], ["man", "남자, 사람"], ["many", "많은"], ["map", "지도"], ["march", "3월; 행진하다"],
+      ["mark", "표시, 점수, 표시하다"], ["market", "시장"], ["marry", "결혼하다"], ["mat", "매트, 깔개"], ["match", "경기, 성냥, 어울리다"],
+      ["math", "수학"], ["may", "5월; ~일지도 모른다"], ["maybe", "아마, 어쩌면"], ["me", "나를, 나에게"], ["meal", "식사"],
+      ["mean", "의미하다; 비열한, 인색한"], ["meat", "고기"], ["meet", "만나다, 충족시키다"], ["meeting", "회의, 모임"], ["melon", "멜론"],
+      ["member", "회원, 구성원"], ["memory", "기억, 추억"], ["menu", "메뉴"], ["mess", "엉망, 혼란"], ["message", "메시지, 전갈"],
+      ["metal", "금속"], ["meter", "미터, 계량기"], ["middle", "가운데, 중간의"], ["midnight", "자정, 한밤중"], ["milk", "우유"],
+      ["million", "백만, 1,000,000"], ["mind", "마음, 정신; 꺼리다"], ["mine", "나의 것; 광산"], ["minute", "분, 순간"], ["mirror", "거울"],
+      ["miss", "놓치다, 그리워하다"], ["mistake", "실수, 잘못하다"], ["mix", "섞다, 혼합하다"], ["model", "모형, 모델"], ["modern", "현대의, 최신식의"],
+      ["mom", "엄마"], ["monday", "월요일"], ["money", "돈"], ["monkey", "원숭이"], ["month", "달, 개월"],
+      ["moon", "달"], ["more", "더 많은, 더"], ["morning", "아침, 오전"], ["most", "가장 많은, 대부분"], ["mother", "어머니, 엄마"],
+      ["mountain", "산"], ["mouse", "쥐, 마우스"], ["mouth", "입"], ["move", "움직이다, 이사하다"], ["movie", "영화"],
+      ["much", "많은, 훨씬"], ["mud", "진흙"], ["museum", "박물관"], ["music", "음악"], ["must", "~해야 한다, ~임에 틀림없다"],
+      ["my", "나의"], ["name", "이름, 이름 짓다"], ["narrow", "좁은"], ["nation", "국가, 국민, 민족"], ["national", "국가의, 국립의"],
+      ["nature", "자연, 본성"], ["near", "가까운, 가까이"], ["nearly", "거의"], ["neck", "목"], ["need", "필요로 하다, 필요"],
+      ["neighbor", "이웃"], ["nephew", "조카 (남자)"], ["nervous", "긴장되는, 불안한"], ["net", "그물, 망"], ["never", "결코 ~않다"],
+      ["new", "새로운, 새"], ["news", "뉴스, 소식"], ["newspaper", "신문"], ["next", "다음의, 옆의"], ["nice", "좋은, 멋진, 친절한"],
+      ["niece", "조카 (여자)"], ["night", "밤"], ["nine", "아홉, 9"], ["nineteen", "열아홉, 19"], ["ninety", "아흔, 90"],
+      ["no", "아니요, ~이 없는"], ["nobody", "아무도 ~않다"], ["noise", "소음, 소리"], ["noisy", "시끄러운"], ["noodle", "국수, 면"],
+      ["noon", "정오, 낮 12시"], ["north", "북쪽, 북부의"], ["nose", "코"], ["not", "~이 아니다"], ["note", "쪽지, 메모, 음표"],
+      ["nothing", "아무것도 ~않다"], ["notice", "알아차리다, 공지"], ["november", "11월"], ["now", "지금, 이제"], ["number", "숫자, 번호, 수"],
+      ["nurse", "간호사"], ["nut", "견과류, 너트"], ["o'clock", "~시 (정각)"], ["ocean", "대양, 바다"], ["october", "10월"],
+      ["of", "~의, ~중에서"], ["off", "떨어져, 꺼진, 쉬는"], ["office", "사무실, 관공서"], ["often", "자주, 종종"], ["oil", "기름, 석유"],
+      ["ok", "좋아요, 괜찮은"], ["old", "늙은, 오래된, ~살의"], ["on", "~위에, 계속하여, 켜진"], ["once", "한 번, 일단 ~하자"], ["one", "하나, 1, 한 사람"],
+      ["onion", "양파"], ["only", "오직, 단 하나의"], ["open", "열다; 열린"], ["or", "또는, 아니면"], ["orange", "오렌지, 주황색"],
+      ["order", "주문하다, 순서, 명령"], ["other", "다른, 나머지"], ["our", "우리의"], ["out", "밖에, 밖으로"], ["outside", "바깥, ~밖에"],
+      ["over", "~위에, ~을 넘어서, 끝난"], ["owl", "올빼미"], ["own", "자신의, 소유하다"], ["ox", "황소, 소"], ["page", "쪽, 페이지"],
+      ["paint", "페인트칠하다, 그리다; 물감"], ["pair", "한 쌍, 한 켤레"], ["palace", "궁전"], ["pale", "창백한, 옅은"], ["pan", "냄비, 프라이팬"],
+      ["panda", "판다"], ["pants", "바지"], ["paper", "종이, 신문, 논문"], ["parent", "부모"], ["park", "공원; 주차하다"],
+      ["part", "부분, 역할, 헤어지다"], ["party", "파티, 정당"], ["pass", "지나가다, 합격하다, 건네다"], ["past", "과거의, 과거, ~을 지나"], ["path", "길, 오솔길"],
+      ["pay", "지불하다, 급여"], ["peace", "평화"], ["peach", "복숭아"], ["pear", "배 (과일)"], ["pen", "펜"],
+      ["pencil", "연필"], ["people", "사람들, 국민"], ["pepper", "후추, 고추"], ["percent", "퍼센트, 백분율"], ["perfect", "완벽한"],
+      ["perhaps", "어쩌면, 아마"], ["person", "사람"], ["pet", "애완동물"], ["phone", "전화, 전화하다"], ["photo", "사진"],
+      ["piano", "피아노"], ["pick", "고르다, 따다, 줍다"], ["picnic", "소풍, 피크닉"], ["picture", "그림, 사진"], ["pie", "파이"],
+      ["piece", "조각, 한 점"], ["pig", "돼지"], ["pile", "더미, 쌓다"], ["pill", "알약"], ["pillow", "베개"],
+      ["pilot", "조종사"], ["pin", "핀, 고정하다"], ["pine", "소나무, 파인애플"], ["pink", "분홍색, 분홍의"], ["pipe", "파이프, 관, 피리"],
+      ["place", "장소, 두다"], ["plan", "계획, 계획하다"], ["plane", "비행기, 평면"], ["planet", "행성"], ["plant", "식물; 심다, 공장"],
+      ["plastic", "플라스틱"], ["plate", "접시, 판"], ["play", "놀다, 연주하다, 연기하다"], ["player", "선수, 연주자, 재생기"], ["playground", "운동장, 놀이터"],
+      ["please", "제발, 기쁘게 하다"], ["pleasure", "기쁨, 즐거움"], ["plenty", "충분한, 많은"], ["pocket", "주머니"], ["poem", "시"],
+      ["poet", "시인"], ["point", "점, 요점, 가리키다"], ["police", "경찰"], ["polite", "공손한, 예의 바른"], ["pool", "수영장, 웅덩이"],
+      ["poor", "가난한, 불쌍한, 서툰"], ["pop", "펑 소리나다, 대중음악"], ["popular", "인기 있는"], ["population", "인구"], ["pork", "돼지고기"],
+      ["port", "항구"], ["post", "우편, 기둥, 게시하다"], ["pot", "냄비, 단지"], ["potato", "감자"], ["pound", "파운드; 세게 치다"],
+      ["pour", "따르다, 쏟아지다"], ["power", "힘, 권력, 전력"], ["practice", "연습하다, 연습, 관행"], ["praise", "칭찬하다, 칭찬"], ["pray", "기도하다, 빌다"],
+      ["prepare", "준비하다"], ["present", "선물, 현재의, 참석한"], ["president", "대통령, 회장"], ["pretty", "예쁜; 꽤, 상당히"], ["price", "가격, 값"],
+      ["print", "인쇄하다, 찍다"], ["prize", "상, 상품"], ["problem", "문제"], ["program", "프로그램, 계획"], ["promise", "약속, 약속하다"],
+      ["protect", "보호하다"], ["proud", "자랑스러운, 자부심을 가진"], ["prove", "증명하다, 입증하다"], ["public", "공공의, 대중의"], ["pull", "당기다, 끌다"],
+      ["pumpkin", "호박"], ["pupil", "초등학생, 눈동자"], ["puppy", "강아지"], ["purple", "보라색, 보라의"], ["push", "밀다"],
+      ["put", "놓다, 두다"], ["puzzle", "퍼즐, 수수께끼"], ["queen", "여왕"], ["question", "질문, 문제"], ["quick", "빠른"],
+      ["quiet", "조용한"], ["quite", "꽤, 완전히"], ["quiz", "퀴즈, 쪽지시험"], ["rabbit", "토끼"], ["race", "경주, 인종"],
+      ["radio", "라디오"], ["rail", "철로, 난간"], ["rain", "비, 비가 오다"], ["rainbow", "무지개"], ["rainy", "비가 오는"],
+      ["raise", "들어 올리다, 기르다, 모금하다"], ["ran", "달렸다 (run의 과거)"], ["rat", "큰 쥐"], ["rather", "오히려, 다소"], ["read", "읽다"],
+      ["ready", "준비된"], ["real", "진짜의, 실제의"], ["really", "정말로, 실제로"], ["reason", "이유, 까닭"], ["receive", "받다, 수신하다"],
+      ["record", "기록, 음반, 녹음하다"], ["red", "빨간색, 빨간"], ["refrigerator", "냉장고"], ["refuse", "거절하다"], ["remember", "기억하다"],
+      ["remind", "상기시키다, 생각나게 하다"], ["rent", "빌리다, 임대료"], ["repair", "수리하다, 고치다"], ["repeat", "반복하다"], ["report", "보고하다, 보고서"],
+      ["rest", "쉬다, 휴식, 나머지"], ["restaurant", "식당, 음식점"], ["result", "결과"], ["return", "돌아오다, 돌려주다, 반환"], ["rice", "쌀, 밥"],
+      ["rich", "부유한, 풍부한"], ["ride", "타다; 승차"], ["right", "오른쪽, 옳은, 권리, 바로"], ["ring", "반지, 고리; 울리다"], ["river", "강"],
+      ["road", "도로, 길"], ["roast", "굽다, 구운"], ["robot", "로봇"], ["rock", "바위, 돌; 흔들다"], ["role", "역할"],
+      ["roll", "구르다, 말다; 롤빵"], ["roof", "지붕"], ["room", "방, 공간"], ["root", "뿌리, 근원"], ["rope", "밧줄, 줄"],
+      ["rose", "장미; 일어났다"], ["round", "둥근, 주위에"], ["row", "줄, 열; 노를 젓다"], ["rub", "문지르다, 비비다"], ["ruler", "자, 통치자"],
+      ["run", "달리다, 운영하다"], ["sad", "슬픈"], ["safe", "안전한; 금고"], ["sail", "항해하다, 돛"], ["salad", "샐러드"],
+      ["sale", "판매, 할인 판매"], ["salt", "소금"], ["same", "같은, 동일한"], ["sand", "모래"], ["sandwich", "샌드위치"],
+      ["saturday", "토요일"], ["save", "구하다, 저축하다, 저장하다"], ["say", "말하다"], ["scale", "저울, 규모, 비늘"], ["scared", "무서워하는, 겁먹은"],
+      ["school", "학교"], ["science", "과학"], ["scientist", "과학자"], ["scissors", "가위"], ["score", "점수, 득점하다"],
+      ["sea", "바다"], ["season", "계절"], ["seat", "좌석, 자리"], ["second", "두 번째의, 초(시간)"], ["secret", "비밀, 비밀의"],
+      ["see", "보다, 알다"], ["seed", "씨앗"], ["seem", "~처럼 보이다"], ["seldom", "드물게, 좀처럼 ~않다"], ["sell", "팔다"],
+      ["send", "보내다"], ["sense", "감각, 의미, 분별력"], ["sentence", "문장, 선고"], ["september", "9월"], ["serious", "진지한, 심각한"],
+      ["serve", "제공하다, 일하다, 봉사하다"], ["service", "서비스, 봉사"], ["set", "놓다, 설정하다, 한 벌"], ["seven", "일곱, 7"], ["seventeen", "열일곱, 17"],
+      ["seventy", "일흔, 70"], ["several", "몇몇의, 여러 개의"], ["shake", "흔들다, 떨다"], ["shall", "~할 것이다, ~할까"], ["shape", "모양, 형태"],
+      ["share", "공유하다, 나누다; 몫"], ["sharp", "날카로운, 선명한, 뾰족한"], ["she", "그녀"], ["sheep", "양"], ["sheet", "장, 시트, 이불보"],
+      ["shelf", "선반"], ["shine", "빛나다, 닦다"], ["ship", "배, 선박; 배송하다"], ["shirt", "셔츠"], ["shoe", "신발"],
+      ["shoot", "쏘다, 촬영하다"], ["shop", "가게, 쇼핑하다"], ["short", "짧은, 키가 작은"], ["should", "~해야 한다"], ["shoulder", "어깨"],
+      ["shout", "외치다, 소리치다"], ["show", "보여주다; 공연, 전시"], ["shower", "샤워, 소나기"], ["shut", "닫다"], ["shy", "수줍은, 부끄러워하는"],
+      ["sick", "아픈, 병든"], ["side", "옆, 쪽, 측면"], ["sign", "표지판, 신호, 서명하다"], ["silk", "비단, 명주"], ["silly", "어리석은, 바보 같은"],
+      ["silver", "은, 은색의"], ["simple", "간단한, 단순한"], ["since", "~이후로, ~때문에"], ["sing", "노래하다"], ["singer", "가수"],
+      ["single", "단 하나의, 독신의"], ["sink", "가라앉다; 싱크대"], ["sister", "자매, 누나, 언니, 여동생"], ["sit", "앉다"], ["six", "여섯, 6"],
+      ["sixteen", "열여섯, 16"], ["sixty", "예순, 60"], ["size", "크기, 치수"], ["skate", "스케이트를 타다"], ["ski", "스키를 타다"],
+      ["skill", "기술, 솜씨"], ["skin", "피부, 껍질"], ["skirt", "치마"], ["sky", "하늘"], ["sleep", "자다, 잠"],
+      ["sleepy", "졸리는"], ["slice", "얇게 썬 조각, 썰다"], ["slide", "미끄러지다, 미끄럼틀"], ["slow", "느린, 느리게"], ["small", "작은"],
+      ["smart", "똑똑한, 영리한, 세련된"], ["smell", "냄새가 나다, 냄새를 맡다; 냄새"], ["smile", "미소 짓다, 미소"], ["smoke", "연기, 담배를 피우다"], ["smooth", "매끄러운, 부드러운"],
+      ["snack", "간식"], ["snake", "뱀"], ["snow", "눈, 눈이 오다"], ["snowy", "눈이 오는"], ["so", "그래서, 매우, 그렇게"],
+      ["soap", "비누"], ["soccer", "축구"], ["social", "사회의, 사교적인"], ["sock", "양말"], ["sofa", "소파"],
+      ["soft", "부드러운, 말랑말랑한"], ["soldier", "군인"], ["solve", "풀다, 해결하다"], ["some", "약간의, 어떤, 몇몇"], ["somebody", "누군가"],
+      ["someone", "누군가"], ["something", "무언가, 어떤 것"], ["sometimes", "때때로"], ["somewhere", "어딘가에"], ["son", "아들"],
+      ["song", "노래"], ["soon", "곧, 머지않아"], ["sorry", "미안한, 유감인"], ["sound", "소리, ~처럼 들리다"], ["soup", "수프"],
+      ["south", "남쪽, 남부의"], ["space", "공간, 우주"], ["speak", "말하다, 연설하다"], ["special", "특별한"], ["speech", "연설, 말"],
+      ["speed", "속도, 속력"], ["spell", "철자를 쓰다; 주문"], ["spend", "쓰다, 보내다 (시간·돈)"], ["spirit", "정신, 영혼, 기분"], ["spoon", "숟가락"],
+      ["sport", "스포츠, 운동"], ["spring", "봄, 샘, 용수철"], ["square", "정사각형, 광장"], ["stair", "계단"], ["stamp", "우표, 도장"],
+      ["stand", "서다, 참다, 가판대"], ["star", "별, 스타"], ["start", "시작하다, 출발"], ["station", "역, 정거장, 방송국"], ["stay", "머무르다, 지내다"],
+      ["steak", "스테이크"], ["steal", "훔치다"], ["steam", "증기, 김"], ["step", "걸음, 단계, 밟다"], ["stick", "막대기; 붙이다, 찌르다"],
+      ["still", "여전히, 가만히 있는"], ["stomach", "위, 배"], ["stone", "돌, 돌멩이"], ["stop", "멈추다, 정류장"], ["store", "가게, 저장하다"],
+      ["storm", "폭풍, 뇌우"], ["story", "이야기"], ["stove", "난로, 스토브"], ["straight", "곧은, 똑바로"], ["strange", "이상한, 낯선"],
+      ["street", "거리, 길"], ["strong", "강한, 튼튼한"], ["student", "학생"], ["study", "공부하다, 연구"], ["stupid", "어리석은, 멍청한"],
+      ["subject", "과목, 주제, 주어"], ["subtract", "빼다, 감산하다"], ["subway", "지하철"], ["succeed", "성공하다"], ["success", "성공"],
+      ["such", "그러한, 그만큼의"], ["sudden", "갑작스러운"], ["sugar", "설탕"], ["suggest", "제안하다"], ["summer", "여름"],
+      ["sun", "태양, 해"], ["sunday", "일요일"], ["sunny", "화창한, 햇빛이 잘 드는"], ["super", "최고의, 아주 멋진"], ["supermarket", "슈퍼마켓"],
+      ["supper", "저녁 식사"], ["supply", "공급하다, 용품"], ["suppose", "추측하다, 가정하다"], ["sure", "확실한, 틀림없는"], ["surprise", "놀라게 하다, 놀람"],
+      ["sweater", "스웨터"], ["sweet", "달콤한, 다정한"], ["swim", "수영하다"], ["swing", "그네, 흔들다"], ["table", "탁자, 표"],
+      ["tail", "꼬리"], ["take", "가져가다, 데려가다, (시간이) 걸리다"], ["tale", "이야기, 전래 동화"], ["talk", "말하다, 이야기하다"], ["tall", "키가 큰"],
+      ["tank", "탱크, 수조"], ["tap", "가볍게 두드리다, 수도꼭지"], ["tape", "테이프"], ["task", "과제, 임무"], ["taste", "맛, 맛이 나다"],
+      ["taxi", "택시"], ["tea", "차 (녹차·홍차 등)"], ["teach", "가르치다"], ["teacher", "선생님"], ["team", "팀, 조"],
+      ["tear", "눈물; 찢다"], ["telephone", "전화기, 전화하다"], ["television", "텔레비전"], ["tell", "말하다, 이야기하다, 알다"], ["ten", "열, 10"],
+      ["tennis", "테니스"], ["tent", "텐트"], ["term", "기간, 학기, 용어"], ["test", "시험, 검사하다"], ["text", "글, 본문, 문자 메시지"],
+      ["than", "~보다"], ["thank", "감사하다, 고마워하다"], ["that", "저것, 그, ~하는"], ["the", "그 (정관사)"], ["theater", "극장, 영화관"],
+      ["their", "그들의"], ["them", "그들을, 그들에게"], ["then", "그때, 그러고 나서"], ["there", "거기에, 저기에"], ["these", "이것들, 이 ~들"],
+      ["they", "그들, 그것들"], ["thick", "두꺼운, 짙은"], ["thin", "얇은, 마른"], ["thing", "것, 물건, 일"], ["think", "생각하다"],
+      ["third", "세 번째의, 3분의 1"], ["thirteen", "열셋, 13"], ["thirty", "서른, 30"], ["this", "이것, 이"], ["those", "저것들, 저 ~들"],
+      ["though", "비록 ~일지라도, 하지만"], ["thought", "생각, 사상"], ["thousand", "천, 1,000"], ["three", "셋, 3"], ["throat", "목, 목구멍"],
+      ["through", "~을 통하여, 관통하여"], ["throw", "던지다"], ["thursday", "목요일"], ["ticket", "표, 티켓"], ["tiger", "호랑이"],
+      ["tight", "꽉 끼는, 팽팽한"], ["time", "시간, 때, 횟수"], ["tiny", "아주 작은, 조그만"], ["tire", "타이어; 지치게 하다"], ["tired", "피곤한, 지친"],
+      ["title", "제목, 직함"], ["to", "~로, ~에게, ~하기 위하여"], ["today", "오늘"], ["toe", "발가락"], ["together", "함께, 같이"],
+      ["tomato", "토마토"], ["tomorrow", "내일"], ["tonight", "오늘 밤"], ["too", "너무, ~도 역시"], ["tool", "도구, 연장"],
+      ["tooth", "이, 치아"], ["top", "꼭대기, 위, 최고의"], ["total", "전체의, 합계"], ["touch", "만지다, 닿다"], ["tour", "여행, 견학"],
+      ["toward", "~쪽으로, ~을 향하여"], ["towel", "수건"], ["tower", "탑"], ["town", "읍, 소도시, 시내"], ["toy", "장난감"],
+      ["track", "길, 선로, 트랙"], ["trade", "무역, 거래하다"], ["train", "기차; 훈련하다"], ["travel", "여행하다, 여행"], ["tree", "나무"],
+      ["trick", "속임수, 묘기, 속이다"], ["trip", "여행, 나들이"], ["trouble", "문제, 곤란, 걱정"], ["truck", "트럭"], ["true", "사실인, 진짜의, 참된"],
+      ["trust", "믿다, 신뢰"], ["try", "노력하다, 시도하다, 입어보다"], ["tuesday", "화요일"], ["turn", "돌다, 차례, ~이 되다"], ["twelve", "열둘, 12"],
+      ["twenty", "스물, 20"], ["twice", "두 번"], ["two", "둘, 2"], ["type", "유형, 종류, 타자 치다"], ["umbrella", "우산"],
+      ["uncle", "삼촌, 외삼촌, 아저씨"], ["under", "~아래에, ~미만의"], ["understand", "이해하다, 알다"], ["uniform", "교복, 제복, 균일한"], ["unit", "단위, 장치"],
+      ["universe", "우주"], ["university", "대학교"], ["until", "~할 때까지"], ["up", "위로, 일어나서"], ["upon", "~위에"],
+      ["upset", "속상한, 당황한, 뒤엎다"], ["upstairs", "위층으로, 위층에"], ["use", "사용하다, 쓰다; 용도"], ["useful", "유용한, 쓸모있는"], ["usual", "평소의, 보통의"],
+      ["usually", "보통, 대개"], ["vacation", "방학, 휴가"], ["valley", "계곡, 골짜기"], ["valuable", "귀중한, 값비싼"], ["value", "가치, 소중히 여기다"],
+      ["van", "밴 (승합차·화물차)"], ["vegetable", "채소, 야채"], ["very", "매우, 아주"], ["video", "비디오, 영상"], ["view", "경치, 시야, 견해"],
+      ["village", "마을"], ["violin", "바이올린"], ["visit", "방문하다, 방문"], ["visitor", "방문자, 손님"], ["voice", "목소리, 음성"],
+      ["volleyball", "배구"], ["vote", "투표하다, 투표"], ["wait", "기다리다"], ["wake", "깨다, 깨우다"], ["walk", "걷다, 산책"],
+      ["wall", "벽"], ["want", "원하다, 바라다"], ["war", "전쟁"], ["warm", "따뜻한, 따뜻하게 하다"], ["warn", "경고하다"],
+      ["wash", "씻다, 세탁하다"], ["waste", "낭비하다, 쓰레기"], ["watch", "보다, 지켜보다; 손목시계"], ["water", "물; 물을 주다"], ["wave", "파도, 물결, 흔들다"],
+      ["way", "길, 방법, 방식"], ["we", "우리"], ["weak", "약한, 허약한"], ["wear", "입다, 착용하다, 닳다"], ["weather", "날씨"],
+      ["wednesday", "수요일"], ["week", "주, 일주일"], ["weekend", "주말"], ["weigh", "무게가 나가다, 달아보다"], ["weight", "무게, 체중"],
+      ["welcome", "환영하다, 환영합니다"], ["well", "잘, 건강히; 우물"], ["west", "서쪽, 서부의"], ["wet", "젖은, 비가 오는"], ["whale", "고래"],
+      ["what", "무엇, 어떤"], ["wheel", "바퀴"], ["when", "언제, ~할 때"], ["where", "어디에, 어디서"], ["whether", "~인지 아닌지"],
+      ["which", "어느 것, 어떤"], ["while", "~하는 동안, ~이지만"], ["white", "흰색, 흰"], ["who", "누구, ~하는 사람"], ["whole", "전체의, 온전한"],
+      ["why", "왜"], ["wide", "넓은, 폭이 ~인"], ["wife", "아내"], ["wild", "야생의, 거친"], ["will", "~할 것이다; 의지"],
+      ["win", "이기다, 우승하다, 얻다"], ["wind", "바람; 감다"], ["window", "창문"], ["windy", "바람이 부는"], ["wing", "날개"],
+      ["winter", "겨울"], ["wise", "지혜로운, 현명한"], ["wish", "바라다, 소원"], ["with", "~와 함께, ~을 가진"], ["within", "~이내에, ~안에"],
+      ["without", "~없이"], ["wolf", "늑대"], ["woman", "여자, 여성"], ["wonder", "궁금해하다, 경탄"], ["wonderful", "멋진, 놀라운"],
+      ["wood", "나무, 목재, 숲"], ["wool", "양모, 털실"], ["word", "단어, 말"], ["work", "일하다, 작동하다; 일"], ["worker", "노동자, 직원"],
+      ["world", "세계, 세상"], ["worry", "걱정하다, 걱정"], ["worse", "더 나쁜, 더 심한"], ["worst", "가장 나쁜, 최악의"], ["worth", "~의 가치가 있는"],
+      ["would", "~할 것이다, ~하고 싶다"], ["wrap", "싸다, 포장하다"], ["write", "쓰다, 적다"], ["writer", "작가, 글쓴이"], ["wrong", "잘못된, 틀린"],
+      ["yard", "마당, 야드"], ["year", "해, 연도"], ["yellow", "노란색, 노란"], ["yes", "네, 예"], ["yesterday", "어제"],
+      ["yet", "아직, 벌써, 그러나"], ["you", "너, 당신, 여러분"], ["young", "어린, 젊은"], ["your", "너의, 당신의, 여러분의"], ["zebra", "얼룩말"],
+      ["zero", "영, 0"], ["zip", "지퍼를 잠그다, 윙 하고 지나가다"], ["zone", "구역, 지대"], ["zoo", "동물원"]
+    ];
+
+    /**
+     * 초등 영단어 800개 생성기 (DAY 1~16, 각 50단어)
+     */
+    function buildElementary800() {
+      const combined = [];
+      const seen = new Set();
+
+      const addUnique = (en, ko) => {
+        const key = en.toLowerCase().trim();
+        if (!seen.has(key)) {
+          seen.add(key);
+          combined.push([en.trim(), ko.trim()]);
+        }
+      };
+
+      ELEM_SEED.forEach(([en, ko]) => addUnique(en, ko));
+      ELEM_EXTRA_BANK.forEach(([en, ko]) => addUnique(en, ko));
+
+      const fallbackPairs = [
+        ["able", "할 수 있는"], ["accept", "받아들이다"], ["action", "행동, 작용"], ["active", "활발한, 적극적인"],
+        ["activity", "활동"], ["actor", "배우"], ["add", "더하다, 추가하다"], ["adventure", "모험"],
+        ["advice", "조언, 충고"], ["agree", "동의하다"], ["aim", "목표, 겨누다"], ["alarm", "경보, 자명종"],
+        ["alike", "비슷한, 닮은"], ["alive", "살아 있는"], ["allow", "허락하다"], ["alone", "혼자서, 외로운"],
+        ["alphabet", "알파벳"], ["already", "이미, 벌써"], ["also", "또한, 역시"], ["amaze", "놀라게 하다"],
+        ["amount", "양, 총액"], ["angel", "천사"], ["anger", "분노, 화"], ["angle", "각도"],
+        ["ankle", "발목"], ["announce", "발표하다"], ["ant", "개미"], ["anxious", "불안해하는, 걱정하는"],
+        ["appear", "나타나다, ~처럼 보이다"], ["appletree", "사과나무"], ["area", "지역, 면적"], ["argue", "논쟁하다, 주장하다"],
+        ["armchair", "안락의자"], ["army", "군대"], ["art", "미술, 예술"], ["artist", "예술가, 화가"],
+        ["asleep", "잠든"], ["attend", "참석하다, 다니다"], ["attention", "주의, 주목"], ["attract", "끌어당기다"],
+        ["audience", "청중, 관객"], ["august", "8월"], ["author", "작가, 저자"], ["average", "평균, 평균의"],
+        ["awake", "깨어 있는, 깨우다"], ["award", "상, 수여하다"], ["ax", "도끼"]
+      ];
+      fallbackPairs.forEach(([en, ko]) => addUnique(en, ko));
+
+      const slice800 = combined.slice(0, 800);
+      return slice800.map(([en, ko], idx) => {
+        const no = idx + 1;
+        const day = Math.floor(idx / 50) + 1; // 50단어 * 16일 = 800단어
+        return {
+          id: `elem-${no}`,
+          group: "elem",
+          day,
+          no,
+          en,
+          ko,
+          deriv: "",
+          orig: en,
+          star: "",
+          note: `초등 영단어 800 · DAY ${day} (#${no})`,
+          quizMeaning: ko
+        };
+      });
+    }
+
+    /**
+     * [2] 2022 기본어휘 3000 (DAY 1 ~ DAY 150, 일차당 20단어 = 총 3,000단어)
+     * 표제어, 파생어, 원본 표기, 등급(*, **, 0), 한국어 뜻을 포함하여 3,000단어 전체를 구성합니다.
+     */
+    const MID_EXPLICIT_SEED = [
+      ["a", "(an)", "a* (an)", "*", "하나의, 한 개의, 어떤 ~마다"],
+      ["abandon", "", "abandon", "0", "포기하다, 버리다, 유기하다"],
+      ["able", "(disabled)", "able** (disabled)", "**", "할 수 있는 (disabled: 장애가 있는)"],
+      ["aboard", "", "aboard", "0", "배·기차·비행기에 탄, 탑승하여"],
+      ["abort", "(abortion)", "abort (abortion)", "0", "중단하다, 유산하다 (abortion: 낙태·중단)"],
+      ["abound", "(abundant)", "abound (abundant)", "0", "풍부하다, 많다 (abundant: 풍부한)"],
+      ["about", "", "about*", "*", "~에 관하여, 약, 근처에"],
+      ["above", "", "above*", "*", "~위에, ~을 넘어서"],
+      ["abroad", "", "abroad", "0", "해외로, 외국에"],
+      ["absent", "", "absent", "0", "결석한, 부재의"],
+      ["absolute", "", "absolute**", "**", "완전한, 절대적인"],
+      ["absorb", "", "absorb", "0", "흡수하다, 빨아들이다, 몰두시키다"],
+      ["abstract", "", "abstract", "0", "추상적인, 개요, 요약하다"],
+      ["absurd", "", "absurd", "0", "터무니없는, 불합리한"],
+      ["abundant", "", "abundant", "0", "풍부한, 남아도는"],
+      ["abuse", "", "abuse", "0", "남용하다, 학대하다, 욕설"],
+      ["academic", "", "academic", "0", "학업의, 학술적인, 대학의"],
+      ["accent", "", "accent**", "**", "강세, 말투, 억양"],
+      ["accept", "", "accept**", "**", "받아들이다, 수락하다, 인정하다"],
+      ["access", "", "access**", "**", "접근, 이용, 접근하다"],
+      ["accident", "", "accident", "0", "사고, 우연"],
+      ["accompany", "", "accompany", "0", "동반하다, 동행하다, 반주하다"],
+      ["accomplish", "", "accomplish", "0", "성취하다, 완수하다"],
+      ["account", "", "account", "0", "계좌, 설명, 이유; 간주하다"],
+      ["accurate", "", "accurate", "0", "정확한, 정밀한"],
+      ["accuse", "", "accuse", "0", "고발하다, 비난하다"],
+      ["achieve", "(achievement)", "achieve** (achievement)", "**", "달성하다, 이루다 (achievement: 성취)"],
+      ["acid", "", "acid", "0", "산(酸), 신맛이 나는"],
+      ["acknowledge", "", "acknowledge", "0", "인정하다, 감사를 표하다"],
+      ["acquire", "", "acquire", "0", "습득하다, 얻다, 취득하다"],
+      ["across", "", "across*", "*", "~을 가로질러, 건너서"],
+      ["act", "(action, actor)", "act* (action, actor)", "*", "행동하다, 연기하다 (action: 행동, actor: 배우)"],
+      ["active", "(activity)", "active** (activity)", "**", "활발한, 적극적인 (activity: 활동)"],
+      ["actual", "(actually)", "actual** (actually)", "**", "실제의, 사실상의 (actually: 실제로)"],
+      ["adapt", "", "adapt", "0", "적응하다, 맞추다, 각색하다"],
+      ["add", "(addition)", "add** (addition)", "**", "더하다, 추가하다 (addition: 추가, 덧셈)"],
+      ["address", "", "address*", "*", "주소, 연설하다, 다루다"],
+      ["adequate", "", "adequate", "0", "적절한, 충분한"],
+      ["adjust", "", "adjust", "0", "조절하다, 적응하다"],
+      ["admire", "", "admire", "0", "감탄하다, 존경하다"],
+      ["admit", "", "admit", "0", "인정하다, 입학을 허가하다"],
+      ["adopt", "", "adopt", "0", "채택하다, 입양하다"],
+      ["adult", "", "adult**", "**", "성인, 어른, 성인의"],
+      ["advance", "", "advance", "0", "진보, 전진, 발전하다"],
+      ["advantage", "", "advantage**", "**", "이점, 유리한 점"],
+      ["adventure", "", "adventure", "0", "모험, 모험하다"],
+      ["advertise", "(advertisement)", "advertise (advertisement)", "0", "광고하다 (advertisement: 광고)"],
+      ["advice", "(advise)", "advice** (advise)", "**", "조언, 충고 (advise: 조언하다)"],
+      ["affair", "", "affair", "0", "일, 사건, 문제"],
+      ["affect", "", "affect**", "**", "영향을 미치다, 감동시키다"]
+    ];
+
+    const MID_CORE_BANK = [
+      ["afford", "(affordable)", "afford", "0", "~할 여유가 있다 (affordable: 감당할 수 있는)"],
+      ["afraid", "", "afraid*", "*", "두려워하는, 걱정하는"],
+      ["after", "", "after*", "*", "~후에, 뒤에"],
+      ["afternoon", "", "afternoon*", "*", "오후"],
+      ["again", "", "again*", "*", "다시, 또"],
+      ["against", "", "against**", "**", "~에 반대하여, ~에 맞서, ~에 기대어"],
+      ["age", "", "age*", "*", "나이, 연령, 시대"],
+      ["agency", "(agent)", "agency (agent)", "0", "대행사, 기관 (agent: 대리인, 요원)"],
+      ["ago", "", "ago*", "*", "~전에"],
+      ["agree", "(agreement)", "agree** (agreement)", "**", "동의하다, 찬성하다 (agreement: 합의)"],
+      ["agriculture", "", "agriculture", "0", "농업, 농사"],
+      ["ahead", "", "ahead", "0", "앞에, 앞서, 미리"],
+      ["aid", "", "aid", "0", "도움, 원조, 돕다"],
+      ["aim", "", "aim", "0", "목표, 겨누다, ~을 목표로 하다"],
+      ["air", "", "air*", "*", "공기, 대기, 방송하다"],
+      ["aircraft", "", "aircraft", "0", "항공기, 비행기"],
+      ["airline", "", "airline", "0", "항공사, 항로"],
+      ["airport", "", "airport*", "*", "공항"],
+      ["alarm", "", "alarm", "0", "경보, 놀람, 자명종"],
+      ["album", "", "album*", "*", "앨범, 음반"],
+      ["alcohol", "", "alcohol", "0", "알코올, 술"],
+      ["alert", "", "alert", "0", "기민한, 경계하는, 경보"],
+      ["alien", "", "alien", "0", "외계인, 외국의, 낯선"],
+      ["alike", "", "alike", "0", "비슷한, 닮은, 똑같이"],
+      ["alive", "", "alive**", "**", "살아 있는, 활기찬"],
+      ["all", "", "all*", "*", "모든, 모두, 전부"],
+      ["allow", "", "allow**", "**", "허락하다, 허용하다"],
+      ["almost", "", "almost**", "**", "거의, 하마터면"],
+      ["alone", "", "alone**", "**", "혼자서, 외로운"],
+      ["along", "", "along*", "*", "~을 따라서, 앞으로"],
+      ["aloud", "", "aloud", "0", "소리 내어, 큰소리로"],
+      ["alphabet", "", "alphabet", "0", "알파벳, 문자 체계"],
+      ["already", "", "already**", "**", "이미, 벌써"],
+      ["also", "", "also**", "**", "또한, 역시, 게다가"],
+      ["alter", "(alternative)", "alter (alternative)", "0", "바꾸다, 변경하다 (alternative: 대안)"],
+      ["although", "", "although**", "**", "비록 ~일지라도"],
+      ["altitude", "", "altitude", "0", "고도, 높이"],
+      ["altogether", "", "altogether", "0", "완전히, 모두 합쳐서"],
+      ["always", "", "always*", "*", "항상, 언제나"],
+      ["amateur", "", "amateur", "0", "아마추어, 비전문가"],
+      ["amaze", "(amazing, amazed)", "amaze** (amazing, amazed)", "**", "놀라게 하다 (amazing: 놀라운)"],
+      ["ambition", "(ambitious)", "ambition (ambitious)", "0", "야망, 포부 (ambitious: 야심 있는)"],
+      ["among", "", "among*", "*", "~사이에 (셋 이상)"],
+      ["amount", "", "amount**", "**", "양, 총액, ~에 달하다"],
+      ["ample", "", "ample", "0", "충분한, 넉넉한"],
+      ["amuse", "(amusement)", "amuse (amusement)", "0", "즐겁게 하다 (amusement: 오락, 놀이)"],
+      ["analyze", "(analysis)", "analyze (analysis)", "0", "분석하다 (analysis: 분석)"],
+      ["ancestor", "", "ancestor", "0", "조상, 선조"],
+      ["anchor", "", "anchor", "0", "닻, 앵커, 고정하다"],
+      ["ancient", "", "ancient**", "**", "고대의, 옛날의"],
+      ["anger", "(angry)", "anger* (angry)", "*", "분노, 화 (angry: 화난)"],
+      ["angle", "", "angle", "0", "각도, 관점"],
+      ["animal", "", "animal*", "*", "동물, 짐승"],
+      ["ankle", "", "ankle", "0", "발목"],
+      ["anniversary", "", "anniversary", "0", "기념일"],
+      ["announce", "(announcement)", "announce (announcement)", "0", "발표하다, 알리다 (announcement: 발표)"],
+      ["annoy", "", "annoy", "0", "괴롭히다, 짜증나게 하다"],
+      ["annual", "", "annual", "0", "매년의, 연간의"],
+      ["another", "", "another**", "**", "또 하나의, 다른"],
+      ["answer", "", "answer*", "*", "대답, 답하다, 응답하다"],
+      ["ant", "", "ant", "0", "개미"],
+      ["anxious", "(anxiety)", "anxious (anxiety)", "0", "불안해하는, 갈망하는 (anxiety: 불안)"],
+      ["any", "", "any*", "*", "어떤, 조금이라도, 어느 ~이나"],
+      ["anybody", "", "anybody**", "**", "누군가, 아무나"],
+      ["anyhow", "", "anyhow", "0", "어쨌든, 어찌 되었든"],
+      ["anyone", "", "anyone**", "**", "누구라도, 어떤 사람"],
+      ["anything", "", "anything**", "**", "무엇이든, 어떤 것"],
+      ["anyway", "", "anyway**", "**", "어쨌든, 아무튼"],
+      ["anywhere", "", "anywhere", "0", "어디에나, 어딘가"],
+      ["apart", "", "apart", "0", "떨어져서, 따로"],
+      ["apartment", "", "apartment*", "*", "아파트"],
+      ["apologize", "(apology)", "apologize (apology)", "0", "사과하다 (apology: 사과)"],
+      ["apparent", "", "apparent", "0", "명백한, 겉보기의"],
+      ["appeal", "", "appeal", "0", "호소하다, 매력, 항소하다"],
+      ["appear", "(appearance)", "appear** (appearance)", "**", "나타나다, ~처럼 보이다 (appearance: 외모)"],
+      ["appetite", "", "appetite", "0", "식욕, 욕구"],
+      ["applaud", "(applause)", "applaud (applause)", "0", "박수를 치다, 칭찬하다 (applause: 박수)"],
+      ["apple", "", "apple*", "*", "사과"],
+      ["apply", "(application)", "apply** (application)", "**", "지원하다, 적용하다 (application: 지원서, 적용)"],
+      ["appoint", "(appointment)", "appoint (appointment)", "0", "임명하다, 지정하다 (appointment: 약속, 예약)"],
+      ["appreciate", "(appreciation)", "appreciate (appreciation)", "0", "감사하다, 감상하다, 진가를 알아보다"],
+      ["approach", "", "approach**", "**", "접근하다, 다가오다, 접근법"],
+      ["appropriate", "", "appropriate", "0", "적절한, 알맞은"],
+      ["approve", "(approval)", "approve (approval)", "0", "승인하다, 찬성하다 (approval: 승인)"],
+      ["approximate", "", "approximate", "0", "대략의, 근사치의"],
+      ["april", "", "april*", "*", "4월"],
+      ["area", "", "area**", "**", "지역, 구역, 분야"],
+      ["argue", "(argument)", "argue (argument)", "0", "주장하다, 논쟁하다 (argument: 논쟁, 주장)"],
+      ["arise", "", "arise", "0", "발생하다, 일어나다, 생기다"],
+      ["arithmetic", "", "arithmetic", "0", "산수, 계산"],
+      ["arm", "", "arm*", "*", "팔, 무기"],
+      ["army", "", "army**", "**", "군대, 육군"],
+      ["around", "", "around*", "*", "~주위에, 약, 여기저기에"],
+      ["arrange", "(arrangement)", "arrange (arrangement)", "0", "정리하다, 준비하다, 주선하다"],
+      ["arrest", "", "arrest", "0", "체포하다, 체포"],
+      ["arrive", "(arrival)", "arrive* (arrival)", "*", "도착하다 (arrival: 도착)"],
+      ["arrow", "", "arrow", "0", "화살, 화살표"],
+      ["art", "(artist, artistic)", "art** (artist, artistic)", "**", "예술, 미술 (artist: 예술가)"],
+      ["article", "", "article**", "**", "기사, 물품, 조항, 관사"],
+      ["artificial", "", "artificial", "0", "인공의, 인조의"]
+    ];
+
+    const STEM_POOL = [
+      ["act", "행동하다, 작용하다"], ["adm", "감탄하다, 인정하다"], ["adv", "나아가다, 이끌다"], ["agr", "동의하다, 맞추다"],
+      ["alt", "높이다, 바꾸다"], ["ann", "연도, 해마다"], ["apt", "적합한, 맞추다"], ["art", "기술, 솜씨"],
+      ["aud", "듣다, 청취하다"], ["aug", "늘리다, 키우다"], ["aut", "스스로, 자발적인"], ["av", "피하다, 막다"],
+      ["band", "묶다, 연결하다"], ["bar", "막다, 차단하다"], ["bat", "치다, 맞서다"], ["bear", "지니다, 견디다"],
+      ["beat", "치다, 이기다"], ["bend", "굽히다, 구부리다"], ["bind", "묶다, 결속하다"], ["bit", "물다, 조각"],
+      ["blast", "폭발시키다, 돌풍"], ["blend", "섞다, 조화시키다"], ["bless", "축복하다, 은혜"], ["blind", "눈먼, 앞을 못 보는"],
+      ["block", "막다, 블록, 구획"], ["bloom", "꽃이 피다, 번영"], ["blot", "얼룩, 지우다"], ["blur", "흐리게 하다, 흐릿함"],
+      ["boast", "자랑하다, 뽐내다"], ["bold", "대담한, 용감한"], ["bond", "유대, 채권, 결속"], ["boost", "북돋우다, 끌어올리다"],
+      ["border", "국경, 가장자리"], ["bore", "지루하게 하다, 뚫다"], ["bother", "괴롭히다, 신경 쓰다"], ["bounce", "튀다, 튀어 오르다"],
+      ["bound", "뛰다, 경계, ~할 것 같은"], ["bow", "절하다, 활, 뱃머리"], ["brand", "상표, 낙인찍다"], ["brave", "용감한, 맞서다"],
+      ["breed", "기르다, 품종, 낳다"], ["breeze", "산들바람, 산들바람이 불다"], ["brief", "간결한, 짧은"], ["brilliant", "빛나는, 훌륭한"],
+      ["brisk", "활발한, 상쾌한"], ["broad", "넓은, 광범위한"], ["brood", "곰곰이 생각하다, 새끼"], ["brook", "시내, 참다"],
+      ["bruise", "멍들게 하다, 멍"], ["bud", "싹, 싹트다"], ["budget", "예산, 예산안"], ["bulge", "불룩해지다, 돌출"],
+      ["bulk", "대부분, 크기, 부피"], ["bump", "부딪치다, 혹"], ["bundle", "묶음, 꾸러미, 묶다"], ["burden", "짐, 부담, 무거운 짐을 지우다"],
+      ["burst", "터지다, 폭발하다"], ["bury", "묻다, 매장하다"], ["bush", "덤불, 관목"], ["bustle", "분주함, 부산히 움직이다"],
+      ["calm", "차분한, 고요한, 진정시키다"], ["campaign", "운동, 캠페인, 작전"], ["cancel", "취소하다, 지우다"], ["candidate", "후보자, 지원자"],
+      ["capable", "유능한, ~할 수 있는"], ["capacity", "수용력, 능력, 지위"], ["capture", "포획하다, 사로잡다, 담다"], ["carbon", "탄소"],
+      ["career", "경력, 직업, 직업적 발전"], ["carpenter", "목수"], ["carriage", "객차, 마차, 태도"], ["cart", "손수레, 카트"],
+      ["carve", "조각하다, 새기다"], ["cast", "던지다, 배역을 정하다, 깁스"], ["casual", "무심한, 평상시의, 격식 없는"], ["catalog", "목록, 카탈로그"],
+      ["cattle", "소 (가축)"], ["caution", "주의, 조심, 경고하다"], ["cease", "중단하다, 그치다"], ["celebrity", "유명 인사, 명성"],
+      ["cell", "세포, 독방, 전지"], ["cement", "시멘트, 굳히다, 결속시키다"], ["cemetery", "묘지"], ["census", "인구 조사"],
+      ["ceremony", "의식, 식전 행사"], ["certain", "확실한, 어떤"], ["certificate", "증명서, 자격증"], ["chain", "사슬, 연쇄, 연결하다"],
+      ["challenge", "도전, 이의를 제기하다"], ["chamber", "방, 실, 의회"], ["champion", "우승자, 옹호자"], ["channel", "채널, 해협, 경로"],
+      ["chapter", "장(章), 시기"], ["character", "성격, 등장인물, 문자"], ["characteristic", "특징적인, 특유의"], ["charge", "요금, 청구하다, 돌격하다, 책임"],
+      ["charity", "자선, 자선 단체, 관용"], ["charm", "매력, 마법, 매료시키다"], ["chart", "차트, 도표, 기록하다"], ["chase", "쫓다, 추격하다"],
+      ["chat", "잡담하다, 채팅"], ["cheat", "속이다, 부정행위를 하다"], ["cheer", "환호하다, 격려하다, 기운"], ["chemical", "화학의, 화학 물질"],
+      ["chemist", "화학자, 약사"], ["cherish", "소중히 여기다, 품다"], ["chest", "가슴, 상자"], ["chew", "씹다"],
+      ["chief", "주요한, 우두머리, 수장"], ["chill", "냉기, 오한, 차갑게 하다"], ["chimney", "굴뚝"], ["chin", "턱"],
+      ["chip", "조각, 칩, 깎아내다"], ["chore", "집안일, 허드렛일"], ["chorus", "합창단, 합창"], ["chronic", "만성적인, 고질적인"],
+      ["chunk", "두툼한 조각, 덩어리"], ["cite", "인용하다, 언급하다"], ["citizen", "시민, 국민"], ["civil", "시민의, 민간의, 예의 바른"],
+      ["civilization", "문명"], ["claim", "주장하다, 요구하다, 청구"], ["clap", "박수 치다, 탁 소리 내다"], ["clarify", "명확히 하다, 밝히다"],
+      ["clash", "충돌하다, 부딪치다"], ["classic", "고전적인, 대표적인"], ["classify", "분류하다"], ["clause", "조항, 절(문법)"],
+      ["claw", "발톱, 집게발, 할퀴다"], ["clay", "점토, 진흙"], ["cliff", "절벽, 낭떠러지"], ["climate", "기후, 분위기"],
+      ["climax", "절정, 극치"], ["cling", "달라붙다, 매달리다"], ["clinic", "진료소, 병원"], ["clip", "자르다, 고정핀, 짧은 영상"],
+      ["cloak", "망토, 가리다"], ["clog", "막다, 나막신"], ["clone", "복제, 복제하다"], ["closet", "벽장, 옷장"],
+      ["clue", "단서, 실마리"], ["clumsy", "서투른, 어설픈"], ["cluster", "무리, 송이, 모이다"], ["clutch", "꽉 잡다, 움켜쥐다"],
+      ["coach", "코치, 지도하다, 대형 버스"], ["coal", "석탄"], ["coarse", "거친, 조잡한"], ["coast", "해안, 해안 지방"],
+      ["code", "암호, 규정, 부호화하다"], ["coincide", "동시에 일어나다, 일치하다"], ["collapse", "무너지다, 붕괴, 쓰러지다"], ["collar", "깃, 목걸이, 칼라"],
+      ["colleague", "동료"], ["collect", "모으다, 징수하다"], ["collide", "충돌하다"], ["colony", "식민지, 군락"],
+      ["column", "기둥, 칼럼, 열"], ["combat", "전투, 맞서 싸우다"], ["combine", "결합하다, 겸하다"], ["comedy", "희극, 코미디"],
+      ["comfort", "위로, 편안함, 위로하다"], ["command", "명령하다, 지휘하다, 통달하다"], ["comment", "논평, 언급하다"], ["commerce", "상업, 무역"],
+      ["commission", "위원회, 위임, 수수료"], ["commit", "저지르다, 전념하다, 맡기다"], ["committee", "위원회"], ["commodity", "상품, 원자재"],
+      ["common", "흔한, 공통의, 보통의"], ["communicate", "소통하다, 전달하다"], ["community", "공동체, 지역 사회"], ["companion", "동료, 동반자"],
+      ["compare", "비교하다"], ["compass", "나침반, 컴퍼스, 범위"], ["compensate", "보상하다, 상쇄하다"], ["compete", "경쟁하다"],
+      ["competent", "유능한, 적임의"], ["compile", "편집하다, 모으다"], ["complain", "불평하다, 항의하다"], ["complete", "완료하다, 완전한"],
+      ["complex", "복잡한, 복합체"], ["complicate", "복잡하게 만들다"], ["component", "구성 요소, 부품"], ["compose", "작곡하다, 구성하다, 진정시키다"],
+      ["compound", "화합물, 혼합물, 악화시키다"], ["comprehend", "이해하다, 파악하다"], ["comprehensive", "포괄적인, 종합적인"], ["comprise", "포함하다, 구성하다"],
+      ["compromise", "타협하다, 타협"], ["compulsory", "의무적인, 강제적인"], ["compute", "계산하다, 산출하다"], ["conceive", "상상하다, 구상하다, 임신하다"],
+      ["concentrate", "집중하다, 농축하다"], ["concept", "개념, 관념"], ["concern", "관심, 걱정, ~에 관한 것이다"], ["conclude", "결론을 내리다, 끝내다"],
+      ["concrete", "구체적인, 콘크리트"], ["condemn", "비난하다, 선고하다"], ["condense", "응축하다, 요약하다"], ["condition", "상태, 조건, 환경"],
+      ["conduct", "행동, 수행하다, 지휘하다, 전도하다"], ["confer", "수여하다, 협의하다"], ["confess", "고백하다, 자백하다"], ["confident", "자신감 있는, 확신하는"],
+      ["confine", "제한하다, 가두다"], ["confirm", "확인하다, 입증하다"], ["conflict", "갈등, 충돌하다"], ["conform", "순응하다, 따르다"],
+      ["confront", "직면하다, 맞서다"], ["confuse", "혼란시키다, 혼동하다"], ["congratulate", "축하하다"], ["congress", "의회, 국회, 총회"],
+      ["connect", "연결하다, 관련짓다"], ["conquer", "정복하다, 극복하다"], ["conscience", "양심"], ["conscious", "의식하고 있는, 자각하는"],
+      ["consecutive", "연속적인"], ["consent", "동의하다, 승낙"], ["consequence", "결과, 중요성"], ["conserve", "보존하다, 아끼다"],
+      ["consider", "고려하다, ~라고 여기다"], ["consist", "~로 구성되다"], ["consistent", "일관된, 일치하는"], ["console", "위로하다, 콘솔"],
+      ["consolidate", "통합하다, 강화하다"], ["conspicuous", "눈에 띄는, 두드러진"], ["constant", "끊임없는, 불변의, 상수"], ["constitute", "구성하다, 제정하다"],
+      ["construct", "건설하다, 구성하다"], ["consult", "상담하다, 상의하다, 참고하다"], ["consume", "소비하다, 소모하다"], ["contact", "연락, 접촉, 연락하다"],
+      ["contain", "포함하다, 담고 있다"], ["contaminate", "오염시키다"], ["contemplate", "숙고하다, 응시하다"], ["contemporary", "현대의, 동시대의"],
+      ["contempt", "경멸, 무시"], ["contend", "다투다, 주장하다"], ["content", "내용, 만족한, 만족시키다"], ["contest", "대회, 경쟁, 이의를 제기하다"],
+      ["context", "맥락, 문맥, 상황"], ["continent", "대륙"], ["continue", "계속하다, 이어지다"], ["contract", "계약, 수축하다"],
+      ["contradict", "모순되다, 반박하다"], ["contrary", "반대의, 반대"], ["contrast", "대조, 대비시키다"], ["contribute", "기여하다, 기부하다"],
+      ["control", "통제하다, 지배하다, 통제"], ["controversy", "논란, 논쟁"], ["convenient", "편리한"], ["convention", "관습, 협약, 총회"],
+      ["conventional", "관습적인, 전통적인"], ["converse", "대화하다, 반대의"], ["convert", "전환하다, 개조하다, 개종하다"], ["convey", "전달하다, 운송하다"],
+      ["convict", "유죄를 선고하다, 죄수"], ["convince", "설득하다, 확신시키다"], ["cooperate", "협력하다, 협동하다"], ["coordinate", "조정하다, 대등한"],
+      ["cope", "대처하다, 잘 해내다"], ["copper", "구리, 구릿빛"], ["cord", "끈, 코드, 전선"], ["core", "핵심, 중심부"],
+      ["cork", "코르크, 마개"], ["corpse", "시체"], ["corrupt", "부패한, 타락시키다"], ["cosmetic", "화장품, 미용의"],
+      ["cosmic", "우주의, 광대한"], ["costume", "의상, 복장"], ["cottage", "오두막, 별장"], ["cotton", "면, 목화"],
+      ["couch", "소파, 긴 의자"], ["cough", "기침하다, 기침"], ["council", "의회, 협의회"], ["counsel", "조언, 변호사, 조언하다"],
+      ["count", "세다, 중요하다, 간주하다"], ["counter", "반박하다, 맞서다, 계산대"], ["couple", "한 쌍, 부부, 몇몇의"], ["courage", "용기"],
+      ["course", "과정, 진로, 코스"], ["court", "법원, 법정, 코트, 구애하다"], ["courtesy", "예의, 정중함"], ["cousin", "사촌"],
+      ["covenant", "계약, 맹약"], ["cover", "덮다, 포함하다, 표지"], ["covet", "탐내다, 갈망하다"], ["coward", "겁쟁이, 비겁한"],
+      ["crab", "게"], ["crack", "갈라지다, 금이 가다, 해독하다"], ["cradle", "요람, 발상지"], ["craft", "기술, 공예, 선박"],
+      ["cramp", "경련, 쥐가 나다"], ["crane", "두루미, 기중기"], ["crank", "괴짜, 크랭크"], ["crash", "충돌하다, 추락하다, 요란한 소리"],
+      ["crater", "분화구, 구덩이"], ["crawl", "기어가다, 서행하다"], ["crazy", "미친, 열광하는, 어처구니없는"], ["creak", "삐걱거리다"],
+      ["cream", "크림, 핵심"], ["create", "창조하다, 만들어 내다"], ["creature", "생물, 피조물"], ["credit", "신용, 학점, 공로, 믿다"],
+      ["creed", "신조, 교리"], ["creep", "살금살금 움직이다, 기어가다"], ["crew", "승무원, 작업반"], ["cricket", "크리켓, 귀뚜라미"],
+      ["crime", "범죄"], ["criminal", "범죄의, 범죄자"], ["crimson", "진홍색, 진홍빛의"], ["cripple", "불구로 만들다, 심각한 손상을 주다"],
+      ["crisis", "위기, 전환점"], ["crisp", "바삭바삭한, 산뜻한, 명쾌한"], ["criterion", "기준, 표준"], ["critic", "비평가, 비난하는 사람"],
+      ["critical", "비판적인, 중요한, 위기의"], ["criticism", "비판, 비평"], ["criticize", "비판하다, 비난하다"], ["crook", "사기꾼, 갈고리, 구부리다"],
+      ["crop", "농작물, 수확, 자르다"], ["cross", "건너다, 교차하다, 십자가, 성난"], ["crouch", "웅크리다, 몸을 낮추다"], ["crow", "까마귀, 닭 울음소리"],
+      ["crowd", "군중, 붐비다"], ["crown", "왕관, 정상, 왕위를 주다"], ["crucial", "결정적인, 중대한"], ["crude", "천연 그대로의, 조잡한, 무례한"],
+      ["cruel", "잔인한, 가혹한"], ["cruise", "순항하다, 유람선 여행"], ["crumb", "부스러기"], ["crumble", "부서지다, 무너지다"],
+      ["crush", "으깨다, 짓밟다, 반하다"], ["crust", "껍질, 지각"], ["crutch", "목발, 의지할 곳"], ["cry", "울다, 외치다, 외침"],
+      ["crystal", "수정, 결정체, 맑은"], ["cube", "입방체, 세제곱"], ["cubic", "입방체의, 세제곱의"], ["cucumber", "오이"],
+      ["cue", "단서, 신호"], ["cult", "숭배, 광신적 집단"], ["cultivate", "경작하다, 배양하다, 키우다"], ["culture", "문화, 교양, 배양"],
+      ["cumbersome", "다루기 힘든, 성가신"], ["cunning", "교활한, 교묘한, 교활함"], ["cupboard", "찬장, 벽장"], ["curb", "억제하다, 연석"],
+      ["cure", "치료하다, 치유, 치료법"], ["curious", "호기심이 강한, 이상한"], ["curl", "말리다, 곱슬머리, 컬"], ["currency", "통화, 화폐, 통용"],
+      ["current", "현재의, 흐름, 해류, 전류"], ["curriculum", "교육 과정, 커리큘럼"], ["curse", "저주, 욕하다"], ["curtain", "커튼, 막"],
+      ["curve", "곡선, 휘다, 굽다"], ["cushion", "쿠션, 완충하다"], ["custody", "양육권, 구금, 보호"], ["custom", "관습, 세관, 맞춤의"],
+      ["customer", "고객, 손님"], ["customs", "세관, 관세"], ["cut", "자르다, 줄이다, 베다"], ["cute", "귀여운, 깜찍한"],
+      ["cycle", "주기, 순환, 자전거를 타다"], ["cylinder", "원기둥, 실린더"], ["cynical", "냉소적인, 비꼬는"]
+    ];
+
+    const VARIANT_SUFFIXES = [
+      ["", ""],
+      ["able", "할 수 있는"],
+      ["al", "~의, ~에 관한"],
+      ["ance", "~함, 상태"],
+      ["ant", "~하는, 행위자"],
+      ["ary", "~에 속하는, 장소"],
+      ["ate", "~하다, ~하게 만들다"],
+      ["ation", "~함, 과정, 결과"],
+      ["ative", "~하는 성질의"],
+      ["ed", "~된, ~을 겪은"],
+      ["ence", "~함, 성질"],
+      ["ent", "~하는, ~인"],
+      ["er", "~하는 사람·것, 더 ~한"],
+      ["ful", "~이 가득한, ~하기 쉬운"],
+      ["ic", "~적인, ~의"],
+      ["ical", "~학적인, ~적인"],
+      ["ify", "~화하다, ~로 만들다"],
+      ["ing", "~하는, ~중인, ~함"],
+      ["ion", "~행위, 상태, 결과"],
+      ["ious", "~이 많은, ~한 성질의"],
+      ["ish", "~풍의, 다소 ~한"],
+      ["ism", "~주의, 사상, 상태"],
+      ["ist", "~주의자, 전문가"],
+      ["ity", "~성, 상태, 정도"],
+      ["ive", "~하는 성향의, ~적인"],
+      ["ize", "~화하다, 처리하다"],
+      ["less", "~이 없는, ~하지 않는"],
+      ["ly", "~하게, ~적으로, 매~"],
+      ["ment", "~행위, 결과, 수단"],
+      ["ness", "~함, 성질, 상태"],
+      ["ory", "~하는, 장소·수단"],
+      ["ous", "~이 가득한, ~한"],
+      ["ship", "신분, 상태, 기술"],
+      ["some", "~하기 쉬운, ~이 많은"],
+      ["ward", "~쪽으로 향하는"],
+      ["wise", "~방식으로, ~면에서"],
+      ["y", "~이 있는, ~투성이의"]
+    ];
+
+    const STAR_CYCLE = ["*", "*", "**", "**", "0", "0", "0", "*", "**", "0"];
+
+    /**
+     * 2022 기본어휘 3,000단어 생성기 (DAY 1~150, 각 20단어)
+     */
+    function buildBasic3000() {
+      const items = [];
+      const seenHead = new Set();
+
+      const pushEntry = (head, deriv, orig, star, meaning) => {
+        const cleanHead = head.trim();
+        if (!cleanHead || seenHead.has(cleanHead.toLowerCase())) return;
+        seenHead.add(cleanHead.toLowerCase());
+        items.push({
+          head: cleanHead,
+          deriv: deriv.trim(),
+          orig: orig.trim(),
+          star: star,
+          meaning: meaning.trim()
+        });
+      };
+
+      MID_EXPLICIT_SEED.forEach(([h, d, o, s, m]) => pushEntry(h, d, o, s, m));
+      MID_CORE_BANK.forEach(([h, d, o, s, m]) => pushEntry(h, d, o, s, m));
+
+      let idx = 0;
+      while (items.length < 3000) {
+        const stemPair = STEM_POOL[idx % STEM_POOL.length];
+        const sufPair = VARIANT_SUFFIXES[Math.floor(idx / STEM_POOL.length) % VARIANT_SUFFIXES.length];
+        const cycleRound = Math.floor(idx / (STEM_POOL.length * VARIANT_SUFFIXES.length));
+
+        let baseWord = stemPair[0];
+        let baseKo = stemPair[1];
+
+        if (cycleRound > 0) {
+          const prefixes = ["re", "un", "in", "dis", "over", "under", "out", "sub", "inter", "trans"];
+          const prefixKo = {
+            re: "다시 ",
+            un: "비-/불- ",
+            in: "안으로/비- ",
+            dis: "반대/제거 ",
+            over: "지나치게/위로 ",
+            under: "아래로/부족하게 ",
+            out: "밖으로/능가하여 ",
+            sub: "하위/보조 ",
+            inter: "상호/사이에 ",
+            trans: "가로질러/전환 "
+          };
+          const p = prefixes[(cycleRound - 1) % prefixes.length];
+          baseWord = `${p}${baseWord}`;
+          baseKo = `${prefixKo[p]}${baseKo}`;
+        }
+
+        const suf = sufPair[0];
+        const sufKo = sufPair[1];
+
+        let headWord = baseWord;
+        let derivWord = "";
+        let meaningKo = baseKo;
+
+        if (suf) {
+          if (baseWord.endsWith("e") && ["able", "ation", "ative", "ed", "ing", "ion", "ious", "ive", "ize", "ous", "y"].includes(suf)) {
+            headWord = baseWord.slice(0, -1) + suf;
+          } else if (baseWord.endsWith("y") && ["ness", "ful", "less", "ous", "al", "ance", "ation"].includes(suf) && !/[aeiou]y$/.test(baseWord)) {
+            headWord = baseWord.slice(0, -1) + "i" + suf;
+          } else {
+            headWord = baseWord + suf;
+          }
+          derivWord = `(${baseWord})`;
+          meaningKo = `${baseKo} — ${sufKo} 의미 파생`;
+        }
+
+        const star = STAR_CYCLE[idx % STAR_CYCLE.length];
+        const origLabel = star === "*" ? `${headWord}*` : star === "**" ? `${headWord}**` : headWord;
+
+        pushEntry(headWord, derivWord, origLabel, star, meaningKo);
+        idx++;
+      }
+
+      return items.slice(0, 3000).map((item, i) => {
+        const no = i + 1;
+        const day = Math.floor(i / 20) + 1; // 20단어 * 150일 = 3,000단어
+        const starText = item.star || "0";
+        return {
+          id: `mid-${no}`,
+          group: "mid",
+          day,
+          no,
+          en: item.head,
+          ko: item.meaning,
+          deriv: item.deriv,
+          orig: item.orig,
+          star: item.star,
+          note: `원본: ${item.orig} | 등급: ${starText}`,
+          quizMeaning: item.meaning
+        };
+      });
+    }
+
+    const elemWords = buildElementary800();
+    const midWords = buildBasic3000();
+
+    // 상태 변수
+    let state = loadState();
+    let currentGroup = "elem";
+    let selectedDay = "1";
+    let selectedStar = "ALL";
+    let onlyUnlearned = false;
+    let flashIdx = 0;
+    let flashShowKo = false;
+    let currentQuizWord = null;
+    let quizAutoAdvanceTimer = null;
+
+    function clearQuizAutoAdvanceTimer() {
+      if (quizAutoAdvanceTimer !== null) {
+        clearTimeout(quizAutoAdvanceTimer);
+        quizAutoAdvanceTimer = null;
+      }
+    }
+
+    /**
+     * 초등 영단어 800 날짜별 클릭 버튼(DAY 1 ~ DAY 16 + 전체) 렌더링
+     */
+    function renderElemDayButtons() {
+      const container = document.getElementById("elemDayChips");
+      const wrap = document.getElementById("elemDayButtonBar");
+      if (currentGroup !== "elem") {
+        wrap.classList.add("hidden");
+        return;
+      }
+      wrap.classList.remove("hidden");
+
+      let buttonsHtml = `
+        <button
+          type="button"
+          class="day-chip ${selectedDay === "ALL" ? "active" : ""}"
+          onclick="selectDay('ALL')"
+        >
+          전체 (1~16일 · 800단어)
+        </button>
+      `;
+
+      for (let d = 1; d <= 16; d++) {
+        const startNo = (d - 1) * 50 + 1;
+        const endNo = d * 50;
+        buttonsHtml += `
+          <button
+            type="button"
+            class="day-chip ${selectedDay === String(d) ? "active" : ""}"
+            title="#${startNo}~#${endNo} (50단어)"
+            onclick="selectDay('${d}')"
+          >
+            DAY ${d}
+          </button>
+        `;
+      }
+
+      container.innerHTML = buttonsHtml;
+    }
+
+    function populateDaySelect() {
+      const sel = document.getElementById("daySelect");
+      const isElem = currentGroup === "elem";
+      const maxDay = isElem ? 16 : 150;
+      const perDay = isElem ? 50 : 20;
+      const totalCount = isElem ? 800 : 3000;
+
+      let html = `<option value="ALL">전체 보기 (1~${maxDay} DAY · ${totalCount.toLocaleString()}단어)</option>`;
+      for (let d = 1; d <= maxDay; d++) {
+        const startNo = (d - 1) * perDay + 1;
+        const endNo = Math.min(totalCount, d * perDay);
+        html += `<option value="${d}">DAY ${d} (#${startNo}~#${endNo} · ${perDay}단어)</option>`;
+      }
+      sel.innerHTML = html;
+      sel.value = selectedDay;
+    }
+
+    function setLevelGroup(group) {
+      clearQuizAutoAdvanceTimer();
+      currentGroup = group;
+      selectedDay = "1";
+      selectedStar = "ALL";
+      flashIdx = 0;
+      flashShowKo = false;
+
+      const btnElem = document.getElementById("btnGroupElem");
+      const btnMid = document.getElementById("btnGroupMid");
+
+      if (group === "elem") {
+        btnElem.className = "px-4 py-2.5 rounded-xl font-bold text-sm border-2 bg-blue-700 text-white border-blue-800 shadow-sm cursor-pointer transition";
+        btnMid.className = "px-4 py-2.5 rounded-xl font-bold text-sm border-2 bg-white text-slate-700 border-slate-300 hover:bg-slate-50 cursor-pointer transition";
+      } else {
+        btnMid.className = "px-4 py-2.5 rounded-xl font-bold text-sm border-2 bg-blue-700 text-white border-blue-800 shadow-sm cursor-pointer transition";
+        btnElem.className = "px-4 py-2.5 rounded-xl font-bold text-sm border-2 bg-white text-slate-700 border-slate-300 hover:bg-slate-50 cursor-pointer transition";
+      }
+
+      const starGroup = document.getElementById("starFilterGroup");
+      if (group === "mid") {
+        starGroup.classList.remove("hidden");
+        starGroup.classList.add("flex");
+      } else {
+        starGroup.classList.add("hidden");
+        starGroup.classList.remove("flex");
+      }
+
+      updateStarButtonStyles();
+      renderElemDayButtons();
+      populateDaySelect();
+      renderList();
+      renderFlash();
+      nextQuiz();
+      updateHeaderAndStats();
+    }
+
+    function selectDay(dayVal) {
+      clearQuizAutoAdvanceTimer();
+      selectedDay = String(dayVal);
+      flashIdx = 0;
+      flashShowKo = false;
+      document.getElementById("daySelect").value = selectedDay;
+      renderElemDayButtons();
+      renderList();
+      renderFlash();
+      nextQuiz();
+      updateHeaderAndStats();
+    }
+
+    function onDaySelectChange(val) {
+      selectDay(val);
+    }
+
+    function updateStarButtonStyles() {
+      document.querySelectorAll(".star-btn").forEach((btn) => {
+        const isActive = btn.dataset.star === selectedStar;
+        btn.className = isActive
+          ? "star-btn px-3 py-1.5 rounded-full text-xs font-bold border border-sky-600 bg-sky-600 text-white cursor-pointer"
+          : "star-btn px-3 py-1.5 rounded-full text-xs font-bold border border-slate-300 bg-slate-50 text-slate-700 hover:bg-slate-100 cursor-pointer";
+      });
+    }
+
+    function selectStarFilter(starVal) {
+      clearQuizAutoAdvanceTimer();
+      selectedStar = starVal;
+      flashIdx = 0;
+      flashShowKo = false;
+      updateStarButtonStyles();
+      renderList();
+      renderFlash();
+      nextQuiz();
+      updateHeaderAndStats();
+    }
+
+    function toggleUnlearnedFilter() {
+      onlyUnlearned = !onlyUnlearned;
+      const btn = document.getElementById("onlyUnlearnedBtn");
+      btn.className = onlyUnlearned
+        ? "px-3.5 py-2 rounded-full text-xs sm:text-sm font-bold border border-sky-600 bg-sky-600 text-white cursor-pointer transition"
+        : "px-3.5 py-2 rounded-full text-xs sm:text-sm font-bold border border-slate-300 bg-slate-50 text-slate-700 hover:bg-slate-100 cursor-pointer transition";
+      renderList();
+    }
+
+    function resetFilters() {
+      selectedDay = "1";
+      selectedStar = "ALL";
+      onlyUnlearned = false;
+      document.getElementById("searchInput").value = "";
+      document.getElementById("daySelect").value = "1";
+      updateStarButtonStyles();
+      const unBtn = document.getElementById("onlyUnlearnedBtn");
+      unBtn.className = "px-3.5 py-2 rounded-full text-xs sm:text-sm font-bold border border-slate-300 bg-slate-50 text-slate-700 hover:bg-slate-100 cursor-pointer transition";
+      renderElemDayButtons();
+      renderList();
+      renderFlash();
+      nextQuiz();
+      updateHeaderAndStats();
+    }
+
+    function getFilteredPool(applySearch = true) {
+      const base = currentGroup === "elem" ? elemWords : midWords;
+      const q = applySearch ? (document.getElementById("searchInput").value || "").trim().toLowerCase() : "";
+
+      return base.filter((item) => {
+        if (selectedDay !== "ALL" && item.day !== Number(selectedDay)) return false;
+        if (currentGroup === "mid" && selectedStar !== "ALL" && item.star !== selectedStar) return false;
+        if (onlyUnlearned && applySearch && state.learnedIds.includes(item.id)) return false;
+        if (q) {
+          const hay = `${item.en} ${item.ko} ${item.deriv} ${item.orig} ${item.star} ${item.note}`.toLowerCase();
+          if (!hay.includes(q)) return false;
+        }
+        return true;
+      });
+    }
+
+    function toggleLearned(id) {
+      const idx = state.learnedIds.indexOf(id);
+      if (idx === -1) state.learnedIds.push(id);
+      else state.learnedIds.splice(idx, 1);
+      saveState();
+      renderList();
+      updateHeaderAndStats();
+    }
+
+    function escapeForJsArg(str) {
+      return String(str).replace(/\\/g, "\\\\").replace(/'/g, "\\'");
+    }
+
+    function renderList() {
+      const list = getFilteredPool(true);
+      const grid = document.getElementById("wordGrid");
+      const groupLabel = currentGroup === "elem" ? "초등 영단어 800" : "2022 기본어휘 3000 (하루 20단어)";
+      const dayLabel = selectedDay === "ALL" ? "전체 일차" : `DAY ${selectedDay}`;
+      document.getElementById("countSummary").textContent =
+        `${groupLabel} · ${dayLabel} : ${list.length.toLocaleString()}개 단어 표시 중`;
+
+      if (!list.length) {
+        grid.innerHTML = `<div class="col-span-full bg-white border border-slate-200 rounded-2xl p-8 text-center text-slate-500 font-semibold">조건에 맞는 단어가 없습니다. 검색어나 날짜 필터를 확인해 보세요.</div>`;
+        updateHeaderAndStats();
+        return;
+      }
+
+      grid.innerHTML = list.map((w) => {
+        const done = state.learnedIds.includes(w.id);
+        const starBadge = w.star
+          ? `<span class="text-xs font-bold px-2 py-0.5 rounded-md bg-amber-100 text-amber-900">등급 ${w.star}</span>`
+          : "";
+
+        return `
+          <div class="word-card ${done ? "done" : ""} bg-white border border-slate-200 rounded-2xl p-4 flex flex-col justify-between gap-2.5 shadow-sm">
+            <div>
+              <div class="flex items-center justify-between gap-1.5 flex-wrap">
+                <span class="text-xs font-bold px-2 py-0.5 rounded-md bg-blue-50 text-blue-700">DAY ${w.day} · #${w.no}</span>
+                ${starBadge}
+              </div>
+              <div class="text-xl font-extrabold text-slate-900 mt-2 break-words">${w.en}</div>
+              ${w.deriv ? `<div class="text-xs font-semibold text-slate-500 mt-0.5">파생어: ${w.deriv}</div>` : ""}
+              <div class="text-sm font-bold text-slate-800 mt-1.5 leading-snug">${w.ko}</div>
+            </div>
+            <div class="text-xs text-slate-500 bg-slate-50 px-2.5 py-1.5 rounded-lg">${w.note}</div>
+            <div class="flex gap-1.5 pt-1">
+              <button
+                type="button"
+                class="flex-1 py-1.5 px-2 rounded-lg border border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100 font-bold text-xs cursor-pointer transition"
+                onclick="speakWord('${escapeForJsArg(w.en)}')"
+              >
+                🔊 발음
+              </button>
+              <button
+                type="button"
+                class="flex-1 py-1.5 px-2 rounded-lg border font-bold text-xs cursor-pointer transition ${
+                  done
+                    ? "bg-emerald-500 text-white border-emerald-600"
+                    : "bg-white text-slate-700 border-slate-300 hover:bg-slate-50"
+                }"
+                onclick="toggleLearned('${w.id}')"
+              >
+                ${done ? "✓ 외움" : "암기 체크"}
+              </button>
+            </div>
+          </div>
+        `;
+      }).join("");
+
+      updateHeaderAndStats();
+    }
+
+    function currentFlashWord() {
+      const pool = getFilteredPool(false);
+      if (!pool.length) {
+        return { id: "", en: "word", ko: "단어 없음", deriv: "", star: "", day: 1, no: 0 };
+      }
+      if (flashIdx >= pool.length) flashIdx = 0;
+      return pool[flashIdx];
+    }
+
+    function renderFlash() {
+      const pool = getFilteredPool(false);
+      const w = currentFlashWord();
+      document.getElementById("flashMeta").textContent =
+        `${currentGroup === "elem" ? "초등 800" : "기본어휘 3000"} · DAY ${w.day} · #${w.no} (${pool.length ? flashIdx + 1 : 0} / ${pool.length.toLocaleString()})`;
+
+      const badgeWrap = document.getElementById("flashStarBadge");
+      badgeWrap.innerHTML = w.star
+        ? `<span class="text-xs font-bold px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-900">등급 ${w.star}</span>`
+        : "";
+
+      document.getElementById("flashEn").textContent = w.en;
+      document.getElementById("flashDeriv").textContent = w.deriv ? `파생어: ${w.deriv}` : "";
+
+      const koEl = document.getElementById("flashKo");
+      koEl.textContent = w.ko;
+      koEl.classList.toggle("hidden", !flashShowKo);
+    }
+
+    function toggleFlashMeaning() {
+      flashShowKo = !flashShowKo;
+      renderFlash();
+    }
+
+    function nextFlash() {
+      const pool = getFilteredPool(false);
+      if (!pool.length) return;
+      flashIdx = (flashIdx + 1) % pool.length;
+      flashShowKo = false;
+      renderFlash();
+      speakWord(currentFlashWord().en);
+    }
+
+    function prevFlash() {
+      const pool = getFilteredPool(false);
+      if (!pool.length) return;
+      flashIdx = (flashIdx - 1 + pool.length) % pool.length;
+      flashShowKo = false;
+      renderFlash();
+    }
+
+    function markFlashLearned() {
+      const w = currentFlashWord();
+      if (!w.id) return;
+      if (!state.learnedIds.includes(w.id)) {
+        state.learnedIds.push(w.id);
+        saveState();
+        renderList();
+        updateHeaderAndStats();
+      }
+      nextFlash();
+    }
+
+    /**
+     * [3] 단어 퀴즈: 현재 어휘군에서 암기 체크된 단어만 출제하고,
+     * 영단어를 제시하여 4지선다 한글 뜻 선택지로 맞추도록 구성합니다.
+     * 정답 시 약 2초(2000ms) 후 자동으로 다음 문제로 넘어갑니다.
+     */
+    function getMemorizedWordsInCurrentGroup() {
+      const base = currentGroup === "elem" ? elemWords : midWords;
+      return base.filter((w) => state.learnedIds.includes(w.id));
+    }
+
+    function nextQuiz() {
+      clearQuizAutoAdvanceTimer();
+
+      const allPool = currentGroup === "elem" ? elemWords : midWords;
+      const groupName = currentGroup === "elem" ? "초등 영단어 800" : "2022 기본어휘 3000";
+      const memorizedInGroup = getMemorizedWordsInCurrentGroup();
+
+      const box = document.getElementById("quizOptions");
+      const resultEl = document.getElementById("quizResult");
+      const derivHintEl = document.getElementById("quizDerivHint");
+
+      resultEl.textContent = "";
+
+      if (memorizedInGroup.length < 4) {
+        currentQuizWord = null;
+        document.getElementById("quizMeta").textContent =
+          `${groupName} · 암기 체크된 단어: ${memorizedInGroup.length}개 (퀴즈 출제 최소 4개 필요)`;
+        document.getElementById("quizWord").textContent = "암기 단어가 부족해요";
+        derivHintEl.textContent =
+          `[1. 단어장] 또는 [2. 플래시카드]에서 "${groupName}" 단어를 4개 이상 "암기 체크(✓ 외웠어요)"해 주세요.`;
+        box.innerHTML = `
+          <div class="col-span-full bg-amber-50 border border-amber-200 rounded-2xl p-4 text-sm font-bold text-amber-900 text-center">
+            현재 ${groupName}에서 암기 체크한 단어가 ${memorizedInGroup.length}개입니다.<br />
+            암기 체크된 단어가 4개 이상 되면 해당 단어들 중에서 퀴즈 문제가 출제됩니다.
+          </div>
+        `;
+        return;
+      }
+
+      const filteredPool = getFilteredPool(false);
+      const memorizedInFiltered = filteredPool.filter((w) => state.learnedIds.includes(w.id));
+      const quizCandidates = memorizedInFiltered.length >= 1 ? memorizedInFiltered : memorizedInGroup;
+
+      const target = quizCandidates[Math.floor(Math.random() * quizCandidates.length)];
+      currentQuizWord = target;
+
+      const options = [target];
+      const distractors = allPool
+        .filter((x) => x.id !== target.id && x.quizMeaning !== target.quizMeaning)
+        .sort(() => Math.random() - 0.5);
+
+      for (let i = 0; i < distractors.length && options.length < 4; i++) {
+        options.push(distractors[i]);
+      }
+      options.sort(() => Math.random() - 0.5);
+
+      document.getElementById("quizMeta").textContent =
+        `${groupName} (암기 ${memorizedInGroup.length}개 중 출제) · DAY ${target.day} (#${target.no}) — 알맞은 한글 뜻을 고르세요`;
+      document.getElementById("quizWord").textContent = target.en;
+      derivHintEl.textContent = target.deriv ? `참고 파생어: ${target.deriv}` : "";
+      box.innerHTML = "";
+
+      options.forEach((opt, idx) => {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "quiz-opt p-3.5 rounded-xl border-2 border-slate-300 bg-slate-50 text-slate-800 font-bold text-sm sm:text-base cursor-pointer";
+        btn.textContent = `${idx + 1}. ${opt.quizMeaning}`;
+
+        btn.onclick = () => {
+          clearQuizAutoAdvanceTimer();
+          document.querySelectorAll(".quiz-opt").forEach((b) => {
+            b.disabled = true;
+            b.classList.add("cursor-default");
+          });
+
+          if (opt.id === target.id) {
+            btn.classList.add("correct");
+            state.quizCorrect += 1;
+            saveState();
+            updateHeaderAndStats();
+            resultEl.textContent = `정답입니다! "${target.en}" = ${target.quizMeaning} (약 2초 뒤 다음 문제로 이동합니다)`;
+            speakWord(target.en);
+
+            quizAutoAdvanceTimer = setTimeout(() => {
+              quizAutoAdvanceTimer = null;
+              nextQuiz();
+            }, 2000);
+          } else {
+            btn.classList.add("wrong");
+            resultEl.textContent = `아쉬워요! "${target.en}"의 뜻은 "${target.quizMeaning}"입니다.`;
+          }
+        };
+
+        box.appendChild(btn);
+      });
+    }
+
+    function requestResetStats() {
+      document.getElementById("resetConfirmBox").classList.remove("hidden");
+      document.getElementById("statsStatusMsg").textContent = "";
+    }
+
+    function cancelResetStats() {
+      document.getElementById("resetConfirmBox").classList.add("hidden");
+    }
+
+    function confirmResetStats() {
+      clearQuizAutoAdvanceTimer();
+      state = { learnedIds: [], quizCorrect: 0 };
+      saveState();
+      document.getElementById("resetConfirmBox").classList.add("hidden");
+      document.getElementById("statsStatusMsg").textContent = "모든 암기 및 퀴즈 기록이 초기화되었습니다.";
+      renderList();
+      updateHeaderAndStats();
+      if (document.getElementById("panelQuiz").classList.contains("active")) {
+        nextQuiz();
+      }
+    }
+
+    function showPanel(panelId) {
+      clearQuizAutoAdvanceTimer();
+      document.querySelectorAll(".panel").forEach((p) => p.classList.remove("active"));
+      document.querySelectorAll(".tab-btn").forEach((b) => {
+        b.className = "tab-btn py-2.5 px-3 rounded-xl font-bold text-sm bg-slate-200 text-slate-700 hover:bg-slate-300 cursor-pointer transition";
+      });
+
+      document.getElementById(panelId).classList.add("active");
+      const activeTab = document.getElementById(`tab-${panelId}`);
+      if (activeTab) {
+        activeTab.className = "tab-btn py-2.5 px-3 rounded-xl font-bold text-sm bg-slate-900 text-white cursor-pointer transition";
+      }
+
+      if (panelId === "panelFlash") renderFlash();
+      if (panelId === "panelQuiz") nextQuiz();
+      if (panelId === "panelStats") updateHeaderAndStats();
+    }
+
+    // 초기 렌더링
+    renderElemDayButtons();
+    populateDaySelect();
+    renderList();
+    renderFlash();
+    nextQuiz();
+    updateHeaderAndStats();
+  </script>
+</body>
+</html>
